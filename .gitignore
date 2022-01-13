@@ -1,0 +1,4 @@
+__pycache/_
+.DS_Store/
+*.out
+*.log
