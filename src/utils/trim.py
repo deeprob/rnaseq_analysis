@@ -3,6 +3,7 @@ import subprocess
 # TODO: add adapter sequence path option here
 def trim_reads(read_pair_1, read_pair_2, out_pair_1, out_pair_2, out_unpaired_1, out_unpaired_2, nthreads=64):
     # trim reads using trimmomatic
+    # TODO: take adapter sequence file as input
     path_to_adapter_sequences_se = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-SE.fa"
     path_to_adapter_sequences_pe = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-PE.fa"
 
