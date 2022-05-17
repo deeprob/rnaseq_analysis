@@ -33,3 +33,12 @@ def infer_counts_columns(filenames):
         column_list.append("_".join([g,s,b,t]))
     return column_list
 
+def generate_design_matrix(colnames, savefile):
+    # genotype, sex, biorep
+    matrix = [list(map(str, colname.split("_")[:3])) for colname in colnames]
+    with open(savefile, "w") as f:
+        f.write(",genotype,sex,biorep\n")
+        for col,line in zip(colnames, matrix):
+            f.write(",".join([col]+line))
+            f.write("\n")
+    return
