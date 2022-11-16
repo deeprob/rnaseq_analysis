@@ -4,108 +4,85 @@ import utils.trim as utt
 import utils.align as uta 
 import utils.count as utc
 import utils.helper as uth
-from itertools import zip_longest
-
-
-def create_dirs(root_dir):
-    trim_dir = os.path.join(root_dir, "trim")
-    align_dir = os.path.join(root_dir, "align")
-    count_dir = os.path.join(root_dir, "count")
-    tmp_dir = os.path.join(root_dir, "tmp")
-
-    os.makedirs(trim_dir, exist_ok=True)
-    os.makedirs(align_dir, exist_ok=True)
-    os.makedirs(count_dir, exist_ok=True)
-    os.makedirs(tmp_dir, exist_ok=True)
-    return trim_dir, align_dir, count_dir, tmp_dir
 
 
 def main(
-    root_dir, read_files_1, read_files_2, genome_file, gtf_file, counts_matrix,
-    index_flag, trim_flag, align_flag, count_flag
+    raw_dir,
+    store_dir,
+    index_dir,
+    lib_prefix,
+    lib_reps,
+    lib_pairs,
+    lib_suffix,
+    lib_short,
+    genome_file,
+    gtf_file, 
+    counts_matrix,
+    index_flag,
+    merge_flag,
+    threads,
     ):
-    # create appropriate directories
-    trim_dir, align_dir, count_dir, tmp_dir = create_dirs(root_dir)
 
-    if read_files_2:
-        assert len(read_files_1) ==  len(read_files_2)
-        paired=True
+    # create appropriate directories
+    trim_dir, align_dir, count_dir, tmp_dir = uth.create_dirs(store_dir, lib_short)
+
+    # parse reps and pairs
+    lib_reps, lib_pairs = uth.parse_rep_and_pairs(lib_reps, lib_pairs)
 
     # preprocess for align
     if index_flag:
-        uta.create_star_index(genome_file, gtf_file, tmp_dir)
+        print("Creating STAR index ...")
+        uta.create_star_index(genome_file, gtf_file, index_dir)
 
-    # get all read_columns
-    counts_cols = uth.infer_counts_columns(read_files_1)
-
-    align_out_files = []
-
-    for read_file1, read_file2 in zip_longest(read_files_1, read_files_2):
-        # base name of read files; all files including paired files will be named based on the prefix read file prefix
-        file1_base = uth.get_file_base(read_file1)
-        if read_file2:
-            file2_base = uth.get_file_base(read_file2)
-        # trim
-        read_file1_paired_out = os.path.join(trim_dir, f"{file1_base}.fastq.gz")
-        read_file1_unpaired_out = os.path.join(trim_dir, f"{file1_base}.unpaired.fastq.gz")
-        if read_file2:
-            read_file2_paired_out = os.path.join(trim_dir, f"{file2_base}.fastq.gz")
-            read_file2_unpaired_out = os.path.join(trim_dir, f"{file2_base}.unpaired.fastq.gz")
-        else:
-            read_file2_paired_out = ""
-            read_file2_unpaired_out = ""
-
-        if trim_flag:
-            print("Trimming...")
-            utt.trim_reads(read_file1, read_file2, read_file1_paired_out, read_file2_paired_out, read_file1_unpaired_out, read_file2_unpaired_out)
-            
-        # align
-        if read_file2_paired_out:
-            read_files = " ".join([read_file1_paired_out, read_file2_paired_out])
-        else:
-            read_files = read_file1_paired_out
+    # trim
+    print("Trimming ...")
+    trim_suff = utt.trim_reads(raw_dir, lib_prefix, lib_reps, lib_pairs, lib_suffix, trim_dir, threads)
         
-        # aligned files will be stored under the name of read1
-        align_out_prefix = os.path.join(align_dir, file1_base)
+    # align
+    print("Aligning ...")
+    align_suff = uta.align(trim_dir, lib_prefix, lib_reps, lib_pairs, trim_suff, align_dir, index_dir, threads)
 
-        if align_flag:
-            print("Aligning...")
-            uta.align(read_files, align_out_prefix, tmp_dir)
-
-        align_out_file = align_out_prefix + "Aligned.sortedByCoord.out.bam"
-        align_out_files.append(align_out_file)
-    
-    assert len(counts_cols) == len(align_out_files)
+    # merge technical replicates if merge flag is on 
 
     # count
-    count_out_file = os.path.join(count_dir, counts_matrix)
-    if count_flag:
-        print("Counting...")
-        utc.count(align_out_files, counts_cols, gtf_file, count_out_file, paired=paired)
-
+    print("Counting ...")
+    count_file = utc.count(align_dir, lib_prefix, lib_reps, lib_pairs, align_suff, gtf_file, count_dir, counts_matrix, threads)
+    print(f"Results stored in {count_file}.")
     return
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='RNASeq Analysis pipeline.')
-    # TODO: argument name with arguments
-    parser.add_argument("root", type=str, help="Provide the root directory where RNASeq output will be stored")
-    parser.add_argument("-f", "--fwd", type=str, help="RNASeq forward reads", nargs='+')
-    parser.add_argument("-r", "--rev", type=str, help="RNASeq reverse read", nargs='+', default=[])
-    parser.add_argument("-g", "--genome", type=str, help="The genome fasta file")
-    parser.add_argument("-e", "--gtf", type=str, help="GTF file with ensemble reference genes")
+    parser.add_argument("meta_file", type=str, help="the meta file path with library information")
+    parser.add_argument("rawdir", type=str, help="Provide the raw directory where RNASeq input fastq files are stored")
+    parser.add_argument("storedir", type=str, help="Provide the project directory where RNASeq output will be stored")
+    parser.add_argument("indexdir", type=str, help="Provide the index directory where STARR index is stored or will be stored")
+    parser.add_argument("library", type=str, help="the library name to extract from meta file")
     parser.add_argument("-c", "--countsmat", type=str, help="count matrix filename",  default="counts.tsv")
-    parser.add_argument("-i", "--starrindex", help="don't run starr index",  action="store_false")
-    parser.add_argument("-t", "--trim", help="don't run trimmomatic",  action="store_false")
-    parser.add_argument("-a", "--align", help="don't run STARR aligner",  action="store_false")
-    parser.add_argument("-n", "--count", help="don't run htseq-counts",  action="store_false")
+    parser.add_argument("-i", "--createstarindex", help="Create star index", action="store_true")
+    parser.add_argument("-m", "--mergereps", help="Merge replicates", action="store_true")
+    parser.add_argument("-p", "--threads", help="number of threads to use", default=64, type=int)
 
     # TODO: adapter sequence file for trimming
-    # TODO: number of threads to parallelize tasks, currently 64 threads
+    # TODO: log file
+    # TODO: merge technical replicates maybe?
 
-    args = parser.parse_args()
+    cli_args = parser.parse_args()
+    lib_args = uth.create_args(cli_args.meta_file, cli_args.library)
  
     main(
-        root_dir=args.root, read_files_1=args.fwd, read_files_2=args.rev, 
-        genome_file=args.genome, gtf_file=args.gtf, counts_matrix=args.countsmat,
-        index_flag=args.starrindex, trim_flag=args.trim, align_flag=args.align, count_flag=args.count 
+        raw_dir=cli_args.rawdir,
+        store_dir=cli_args.storedir, 
+        index_dir=cli_args.indexdir,
+        lib_prefix=lib_args.prefix, 
+        lib_reps=lib_args.reps,
+        lib_pairs=lib_args.pairs,
+        lib_suffix=lib_args.suffix,
+        lib_short=lib_args.shortform,
+        genome_file=lib_args.reference_genome, 
+        gtf_file=lib_args.reference_genome_gtf, 
+        counts_matrix=cli_args.countsmat,
+        index_flag=cli_args.createstarindex,
+        merge_flag=cli_args.mergereps,
+        threads=cli_args.threads,
         )

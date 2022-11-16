@@ -7,5 +7,5 @@ Algorithms: | Trimmomatic | STAR | HTSeq | DESeq2
 
 # Conda environment
 ```bash
-foo@bar:~$ conda create -n rnaseq -c conda-forge -c anaconda -c bioconda python=3 trimmomatic star htseq bioconductor-deseq2 -y
+foo@bar:~$ conda create -n rnaseq -c conda-forge -c anaconda -c bioconda python=3 trimmomatic star htseq bioconductor-deseq2 pandas -y
 ```

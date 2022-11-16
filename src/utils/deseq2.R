@@ -2,6 +2,7 @@ library(DESeq2)
 
 ## good example ##
 # https://lashlock.github.io/compbio/R_presentation.html
+# https://www.reneshbedre.com/blog/deseq2.html
 
 # get the counts file
 args = commandArgs(trailingOnly=TRUE)
