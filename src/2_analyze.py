@@ -2,6 +2,7 @@ import os
 import argparse
 import utils.qc as utq
 import utils.helper as uth
+import utils.enrich as ute
 
 def main(
     counts_dir,
@@ -15,7 +16,7 @@ def main(
     store_dir
     ):
     # create appropriate directories
-    qc_dir = utq.create_dirs(store_dir)
+    qc_dir, enrich_dir = utq.create_dirs(store_dir)
 
     # match lengths for libraries and countsmats | controls and deoutfiles | controls and geneidtonamefiles
     libraries, countsmats = utq.match_lengths(libraries, countsmats)
@@ -27,6 +28,10 @@ def main(
 
     # create volcano plots
     utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir)
+
+    # get enriched go terms
+    degenes_dir = ute.get_de_genes(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, enrich_dir, thresh=0.01)
+    ute.run_enrichment(degenes_dir, treatments, controls, enrich_dir)
 
     return
 

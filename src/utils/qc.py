@@ -1,5 +1,4 @@
 import os
-from itertools import zip_longest
 import pandas as pd
 from bioinfokit import visuz
 import matplotlib
@@ -20,8 +19,10 @@ def save_pdf(fig, savefile):
 
 def create_dirs(store_dir):
     qc_dir = os.path.join(store_dir, "qc")
+    enrich_dir = os.path.join(store_dir, "enrich")
     os.makedirs(qc_dir, exist_ok=True)
-    return qc_dir
+    os.makedirs(enrich_dir, exist_ok=True)
+    return qc_dir, enrich_dir
 
 def match_lengths(iter1, iter2):
     if len(iter2) != len(iter1):

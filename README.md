@@ -19,3 +19,8 @@ foo@bar:~$ conda create -n rnaseq_qc -c conda-forge -c anaconda -c bioconda pyth
 ```bash
 foo@bar$ conda create -n gsea -c bioconda -c conda-forge bioconductor-clusterprofiler==3.6.0 bioconductor-biomart==2.34.2 bioconductor-org.hs.eg.db
 ```
+
+# Conda environment for enrichment visualization 
+```bash
+foo@bar$ conda create -n gseaviz -c bioconda -c conda-forge bioconductor-enrichplot
+```
