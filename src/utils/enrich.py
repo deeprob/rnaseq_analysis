@@ -67,8 +67,3 @@ def run_enrichment(de_genes_dir, treatments, controls, store_dir):
         run_enrichment_helper(gene_in, gseaout_file, keggout_file, gseafigout_file, keggfigout_file, tmp_dir)
     return
 
-####################
-# enrichment plots #
-####################
-
-

@@ -36,7 +36,7 @@ goenrich = enrichGO(
 )
 
 pdf(gseafigout_file)
-myplot <- dotplot(goenrich, showCategory=30) + ggtitle("dotplot for GSEA")
+myplot <- dotplot(goenrich, showCategory=20, font.size=8) + ggtitle("dotplot for GSEA")
 print(myplot)
 dev.off()
 
@@ -49,7 +49,7 @@ kenrich = enrichKEGG(
 )
 
 pdf(keggfigout_file)
-myplot <- dotplot(kenrich, showCategory=30) + ggtitle("dotplot for KEGG")
+myplot <- dotplot(kenrich, showCategory=25, font.size=8) + ggtitle("dotplot for KEGG")
 print(myplot)
 dev.off()
 

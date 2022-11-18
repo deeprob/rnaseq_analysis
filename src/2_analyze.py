@@ -13,7 +13,8 @@ def main(
     countsmats,
     deoutfiles,
     geneidtonamefiles,
-    store_dir
+    store_dir,
+    genenames,
     ):
     # create appropriate directories
     qc_dir, enrich_dir = utq.create_dirs(store_dir)
@@ -27,7 +28,7 @@ def main(
     utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir)
 
     # create volcano plots
-    utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir)
+    utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir, genenames)
 
     # get enriched go terms
     degenes_dir = ute.get_de_genes(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, enrich_dir, thresh=0.01)
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("--countsmats", type=str, help="count matrix filebasenames", nargs="+", default=["counts.tsv"])
     parser.add_argument("--deoutfiles", type=str, help="diff exp outfilenames", nargs="+", default=["de_results.csv"])
     parser.add_argument("--geneidtonamefiles", type=str, help="diff exp gene id to name mappings", nargs="+", default=["geneid2name.csv"])
+    parser.add_argument("--genenames", type=str, help="Gene names of interest that will be plotted in the volcano", nargs="+", default=[])
 
     cli_args = parser.parse_args()
     lib_shorts = [uth.create_args(cli_args.meta_file, lib).shortform for lib in cli_args.libraries]
@@ -64,4 +66,5 @@ if __name__ == "__main__":
         cli_args.deoutfiles,
         cli_args.geneidtonamefiles,
         cli_args.store_dir,
+        cli_args.genenames
     )
