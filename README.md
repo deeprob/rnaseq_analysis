@@ -7,20 +7,15 @@ Algorithms: | Trimmomatic | STAR | HTSeq | DESeq2
 
 # Conda environment for reads to differential expression
 ```bash
-foo@bar:~$ conda create -n rnaseq -c conda-forge -c anaconda -c bioconda python=3 trimmomatic star htseq bioconductor-deseq2 pandas bioconductor-clusterprofiler==3.6.0 bioconductor-biomart==2.34.2 bioconductor-org.hs.eg.db bioinfokit scikit-learn seaborn -y
+foo@bar:~$ conda create -n rnaseq -c conda-forge -c anaconda -c bioconda python=3 trimmomatic star htseq bioconductor-deseq2 pandas -y
 ```
 
 # Conda environment for quality control 
 ```bash
-foo@bar:~$ conda create -n rnaseq_qc -c conda-forge -c anaconda -c bioconda python=3 pandas bioinfokit scikit-learn seaborn -y
+foo@bar:~$ conda create -n rnaseq_qc -c conda-forge -c anaconda -c bioconda python=3 pandas scikit-learn seaborn -y
 ```
 
 # Conda environment for enrichment analysis 
 ```bash
-foo@bar$ conda create -n gsea -c bioconda -c conda-forge bioconductor-clusterprofiler==3.6.0 bioconductor-biomart==2.34.2 bioconductor-org.hs.eg.db
-```
-
-# Conda environment for enrichment visualization 
-```bash
-foo@bar$ conda create -n gseaviz -c bioconda -c conda-forge bioconductor-enrichplot
+foo@bar$ conda create -n gsea -c bioconda -c conda-forge bioconductor-clusterprofiler bioconductor-biomart bioconductor-org.hs.eg.db bioconductor-enrichplot
 ```
