@@ -15,6 +15,7 @@ def main(
     geneidtonamefiles,
     store_dir,
     genenames,
+    factor
     ):
     # create appropriate directories
     qc_dir, enrich_dir = utq.create_dirs(store_dir)
@@ -25,7 +26,7 @@ def main(
     controls, geneidtonamefiles = utq.match_lengths(controls, geneidtonamefiles)
 
     # create pca plot
-    utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir)
+    utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir, factor)
 
     # create volcano plots
     utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir, genenames)
@@ -45,10 +46,11 @@ if __name__ == "__main__":
     parser.add_argument("store_dir", type=str, help="Directory where RNASeq DE output will be stored")
     parser.add_argument("-l", "--libraries", type=str, help="All library names for pca plot", nargs="+")
     parser.add_argument("-c", "--controls", type=str, help="The control library names for volcano plots", nargs="+")
-    parser.add_argument("-t", "--treatments", type=str, help="The treatment library names for volvano plots", nargs="+")
+    parser.add_argument("-t", "--treatments", type=str, help="The treatment library names for volcano plots", nargs="+")
     parser.add_argument("--countsmats", type=str, help="count matrix filebasenames", nargs="+", default=["counts.tsv"])
     parser.add_argument("--deoutfiles", type=str, help="diff exp outfilenames", nargs="+", default=["de_results.csv"])
     parser.add_argument("--geneidtonamefiles", type=str, help="diff exp gene id to name mappings", nargs="+", default=["geneid2name.csv"])
+    parser.add_argument("--factor", action="store_true", help="whether to plot factor in pca plot")
     parser.add_argument("--genenames", type=str, help="Gene names of interest that will be plotted in the volcano", nargs="+", default=[])
 
     cli_args = parser.parse_args()
@@ -66,5 +68,6 @@ if __name__ == "__main__":
         cli_args.deoutfiles,
         cli_args.geneidtonamefiles,
         cli_args.store_dir,
-        cli_args.genenames
+        cli_args.genenames,
+        cli_args.factor
     )

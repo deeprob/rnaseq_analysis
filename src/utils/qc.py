@@ -41,7 +41,7 @@ def get_meta_counts(counts_dir, libraries, count_filenames):
     df = pd.concat([read_counts_file(counts_dir, lib, cf) for lib, cf in zip(libraries, count_filenames)], axis=1)
     return df
 
-def get_pca_components(meta_df):
+def get_pca_components(meta_df, factor=False):
     meta_df_norm = (meta_df-meta_df.mean())/meta_df.std()
     pca = PCA(n_components=2)
     components = pca.fit_transform(meta_df_norm.T)
@@ -51,17 +51,19 @@ def get_pca_components(meta_df):
         "pca_comp2": components[:, 1],
         "library": [c.split("_")[0] for c in meta_df_norm.columns],
     })
+    if factor:
+        pca_df["factor"] = pca_df.lib_info.str.split("_", expand=True)[1]
     return pca_df
 
-def get_pca_plots_helper(meta_df):
-    pca_df = get_pca_components(meta_df) 
+def get_pca_plots_helper(meta_df, factor=False):
+    pca_df = get_pca_components(meta_df, factor) 
     fig, ax = plt.subplots(1, 1, figsize=(8,4), sharex=True, sharey=True)
     sns.scatterplot(
         data=pca_df, 
         x="pca_comp1", 
         y="pca_comp2", 
         hue="library", 
-        style="library", 
+        style="factor" if factor else "library", 
         legend=True, 
         ax=ax, 
         s=150,
@@ -73,9 +75,9 @@ def get_pca_plots_helper(meta_df):
     ax.legend(loc="lower center", markerscale=2,  prop={'size': 12})
     return fig
 
-def save_pca_plot(counts_dir, libraries, count_filenames, store_dir):
+def save_pca_plot(counts_dir, libraries, count_filenames, store_dir, factor=False):
     meta_df = get_meta_counts(counts_dir, libraries, count_filenames)
-    f = get_pca_plots_helper(meta_df)
+    f = get_pca_plots_helper(meta_df, factor)
     store_dir = os.path.join(store_dir, "figures")
     os.makedirs(store_dir, exist_ok=True)
     save_file = os.path.join(store_dir, "library_pca.pdf")
@@ -112,6 +114,10 @@ def parse_deseqres_for_volcano_plot(df):
     return df
 
 def create_volcano_fig_raw(df_volcano, lfc_thresh=1, pv_thresh=0.01, gene_set=[]):
+
+    if not gene_set:
+        gene_set = df_volcano.sort_values("padj").head().gene_name.values
+
     fig, axes = plt.subplots(1, 1, figsize=(6, 8))
     sns.scatterplot(
         data=df_volcano, x="log2FoldChange", y="neglog10padj", 
@@ -123,21 +129,20 @@ def create_volcano_fig_raw(df_volcano, lfc_thresh=1, pv_thresh=0.01, gene_set=[]
     axes.axvline(x=-lfc_thresh, linestyle="--", color="k")
     axes.axhline(y=-np.log10(pv_thresh), linestyle="--", color="k")
 
-    if gene_set:
-        xcoord_shift = 0.25
-        ycoord_shift = 0.25
-        y_coord = max(df_volcano.neglog10padj) + ycoord_shift
-        x_coord = max(df_volcano.log2FoldChange) + xcoord_shift
+    xcoord_shift = 0.25
+    ycoord_shift = 0.25
+    y_coord = max(df_volcano.neglog10padj) + ycoord_shift
+    x_coord = max(df_volcano.log2FoldChange) + xcoord_shift
 
-        for info in df_volcano.loc[df_volcano.gene_name.isin(gene_set)].itertuples():
-            axes.annotate(
-                info.gene_name, 
-                xy=(info.log2FoldChange, info.neglog10padj), xytext=(x_coord, y_coord), 
-                arrowprops={"arrowstyle": "->", "lw": 1, "color": "black", "ls": "--", "relpos": (0,0.5)}, 
-                fontsize=12)
-            y_coord -= axes.get_ylim()[1]//20
+    for info in df_volcano.loc[df_volcano.gene_name.isin(gene_set)].itertuples():
+        axes.annotate(
+            info.gene_name, 
+            xy=(info.log2FoldChange, info.neglog10padj), xytext=(x_coord, y_coord), 
+            arrowprops={"arrowstyle": "->", "lw": 1, "color": "black", "ls": "--", "relpos": (0,0.5)}, 
+            fontsize=12)
+        y_coord -= axes.get_ylim()[1]//20
 
-        axes.set_xlim(axes.get_xlim()[0], axes.get_xlim()[1]+ xcoord_shift + axes.get_xlim()[1]/20)
+    axes.set_xlim(axes.get_xlim()[0], axes.get_xlim()[1]+ xcoord_shift + axes.get_xlim()[1]/20)
     axes.spines['top'].set_visible(False)
     axes.spines['right'].set_visible(False)
     axes.collections[0].set_rasterized(True)
