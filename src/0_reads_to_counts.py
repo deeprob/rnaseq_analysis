@@ -38,7 +38,7 @@ def main(
     print("Trimming ...")
     trim_suff = utt.trim_reads(raw_dir, lib_prefix, lib_reps, lib_pairs, lib_suffix, trim_dir, threads)
     # trim_suff = "fastq.gz"
-        
+
     # align
     print("Aligning ...")
     align_suff = uta.align(trim_dir, lib_prefix, lib_reps, lib_pairs, trim_suff, align_dir, index_dir, threads)
