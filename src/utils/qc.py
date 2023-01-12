@@ -140,7 +140,7 @@ def create_volcano_fig_raw(df_volcano, lfc_thresh=1, pv_thresh=0.01, gene_set=[]
             xy=(info.log2FoldChange, info.neglog10padj), xytext=(x_coord, y_coord), 
             arrowprops={"arrowstyle": "->", "lw": 1, "color": "black", "ls": "--", "relpos": (0,0.5)}, 
             fontsize=12)
-        y_coord -= axes.get_ylim()[1]//20
+        y_coord -= axes.get_ylim()[1]//20 # division by 20 needs to be edited to fit the limits correctly
 
     axes.set_xlim(axes.get_xlim()[0], axes.get_xlim()[1]+ xcoord_shift + axes.get_xlim()[1]/20)
     axes.spines['top'].set_visible(False)
