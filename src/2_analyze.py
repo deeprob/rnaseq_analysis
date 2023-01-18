@@ -15,7 +15,8 @@ def main(
     geneidtonamefiles,
     store_dir,
     genenames,
-    factor
+    factor,
+    pcaoutfile,
     ):
     # create appropriate directories
     qc_dir, enrich_dir = utq.create_dirs(store_dir)
@@ -26,7 +27,7 @@ def main(
     controls, geneidtonamefiles = utq.match_lengths(controls, geneidtonamefiles)
 
     # create pca plot
-    utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir, factor)
+    utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir, factor, pcaoutfile)
 
     # create volcano plots
     utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir, genenames)
@@ -51,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--deoutfiles", type=str, help="diff exp outfilenames", nargs="+", default=["de_results.csv"])
     parser.add_argument("--geneidtonamefiles", type=str, help="diff exp gene id to name mappings", nargs="+", default=["geneid2name.csv"])
     parser.add_argument("--factor", action="store_true", help="whether to plot factor in pca plot")
+    parser.add_argument("--pcaoutfile", type=str, default="library_pca", help="pca plot outfilename without extension")
     parser.add_argument("--genenames", type=str, help="Gene names of interest that will be plotted in the volcano", nargs="+", default=[])
 
     cli_args = parser.parse_args()
@@ -69,5 +71,6 @@ if __name__ == "__main__":
         cli_args.geneidtonamefiles,
         cli_args.store_dir,
         cli_args.genenames,
-        cli_args.factor
+        cli_args.factor,
+        cli_args.pcaoutfile
     )

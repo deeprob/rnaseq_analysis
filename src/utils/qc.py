@@ -75,12 +75,12 @@ def get_pca_plots_helper(meta_df, factor=False):
     ax.legend(loc="lower center", markerscale=2,  prop={'size': 12})
     return fig
 
-def save_pca_plot(counts_dir, libraries, count_filenames, store_dir, factor=False):
+def save_pca_plot(counts_dir, libraries, count_filenames, store_dir, factor, pcaoutfile):
     meta_df = get_meta_counts(counts_dir, libraries, count_filenames)
     f = get_pca_plots_helper(meta_df, factor)
     store_dir = os.path.join(store_dir, "figures")
     os.makedirs(store_dir, exist_ok=True)
-    save_file = os.path.join(store_dir, "library_pca.pdf")
+    save_file = os.path.join(store_dir, f"{pcaoutfile}.pdf")
     save_pdf(f, save_file)
     return
 
