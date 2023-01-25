@@ -53,11 +53,17 @@ def make_meta_counts(
     gid2name_df.iloc[:-5].to_csv(gid2name_outfile, index=False, header=True)
     return list(meta_count_df.columns), store_dir, meta_counts_outfile
     
-def get_colname_conditions(colnames, design_formula_components):
-     return [list(map(str, colname.split("_")[:len(design_formula_components)])) for colname in colnames]
+def get_colname_conditions(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components):
+    control_conditions = [[control_pre] + control_rep.split("_")[:len(design_formula_components)-1] for control_rep in control_reps.split()]
+    treatment_conditions = [[treatment_pre] + treatment_rep.split("_")[:len(design_formula_components)-1] for treatment_rep in treatment_reps.split()]
+    print(control_conditions)
+    print(treatment_conditions)
+    conditions = control_conditions + treatment_conditions
+    assert len(colnames) == len(conditions)
+    return conditions
 
-def generate_design_matrix(colnames, design_formula_components, savefile):
-    conditions = get_colname_conditions(colnames, design_formula_components)
+def generate_design_matrix(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components, savefile):
+    conditions = get_colname_conditions(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components)
     with open(savefile, "w") as f:
         f.write(f",{','.join(design_formula_components)}\n")
         for col,line in zip(colnames, conditions):
@@ -65,8 +71,8 @@ def generate_design_matrix(colnames, design_formula_components, savefile):
             f.write("\n")
     return
 	
-def run_deseq2(counts_file, counts_cols, designfile, design_formula, contrast, de_file):
+def run_deseq2(counts_file, counts_cols, designfile, design_formula, contrast, de_file, normcts_file):
 	counts_cols_to_str = ",".join(counts_cols)
-	cmd = ["Rscript", deseq2_script_path, counts_file, counts_cols_to_str, designfile, design_formula, contrast, de_file]
+	cmd = ["Rscript", deseq2_script_path, counts_file, counts_cols_to_str, designfile, design_formula, contrast, de_file, normcts_file]
 	subprocess.run(cmd)
 	return

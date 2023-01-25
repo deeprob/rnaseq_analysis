@@ -18,7 +18,8 @@ def main(
     design_formula_components,
     meta_counts_file,
     design_matrix_file, 
-    de_results_file
+    de_results_file,
+    meta_norm_counts_file
     ):
     # create appropriate directories
     de_dir = utd.create_dirs(store_dir)
@@ -38,18 +39,20 @@ def main(
 
     # make design matrix
     design_matrix_file = os.path.join(de_dir, design_matrix_file)
-    utd.generate_design_matrix(counts_columns, design_formula_components, design_matrix_file)
-    results_file = os.path.join(de_dir, de_results_file)
+    utd.generate_design_matrix(counts_columns, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components, design_matrix_file)
 
     # create contrast
-
     contrast = ",".join([design_formula_components[0], treatment_pre, control_pre])
     print(f"Genes with logFC > 0 are overexpressed in {treatment_pre}.")
     
+    # create out filenames
+    results_file = os.path.join(de_dir, de_results_file)
+    meta_norm_counts_file = os.path.join(de_dir, meta_norm_counts_file)
+
     # deseq2
     print("Differential Expression ...")
     utd.run_deseq2(
-        meta_counts_outfile, counts_columns, design_matrix_file, design_formula, contrast, results_file
+        meta_counts_outfile, counts_columns, design_matrix_file, design_formula, contrast, results_file, meta_norm_counts_file
         )
     return
 
@@ -66,6 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--metacountsoutfile", type=str, help="meta counts matrix filename", default="meta_counts.csv")
     parser.add_argument("-m", "--matrixoutfile", type=str, help="design matrix out filename", default="design_mat.csv")
     parser.add_argument("-o", "--deoutfile", type=str, help="diff exp outfilename", default="de_results.csv")
+    parser.add_argument("-s", "--normctsoutfile", type=str, help="DESeq2 normalized counts out file", default="meta_norm_counts.csv")
 
 
     cli_args = parser.parse_args()
@@ -86,5 +90,6 @@ if __name__ == "__main__":
         design_formula_components=cli_args.formula,
         meta_counts_file=cli_args.metacountsoutfile,
         design_matrix_file=cli_args.matrixoutfile, 
-        de_results_file=cli_args.deoutfile
+        de_results_file=cli_args.deoutfile,
+        meta_norm_counts_file=cli_args.normctsoutfile
         )
