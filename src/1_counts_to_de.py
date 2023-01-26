@@ -13,6 +13,8 @@ def main(
     treatment_pre,
     control_reps,
     treatment_reps,
+    control_factor_dict,
+    treatment_factor_dict,
     controlcountsmat,
     treatmentcountsmat,
     design_formula_components,
@@ -39,7 +41,7 @@ def main(
 
     # make design matrix
     design_matrix_file = os.path.join(de_dir, design_matrix_file)
-    utd.generate_design_matrix(counts_columns, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components, design_matrix_file)
+    utd.generate_design_matrix(counts_columns, control_pre, treatment_pre, control_reps, treatment_reps, control_factor_dict, treatment_factor_dict, design_formula_components, design_matrix_file)
 
     # create contrast
     contrast = ",".join([design_formula_components[0], treatment_pre, control_pre])
@@ -75,6 +77,11 @@ if __name__ == "__main__":
     cli_args = parser.parse_args()
     control_args = uth.create_args(cli_args.meta_file, cli_args.control)
     treatment_args = uth.create_args(cli_args.meta_file, cli_args.treatment)
+
+    control_factor_dict, treatment_factor_dict = dict(), dict()
+    if len(cli_args.formula)>1:
+        control_factor_dict = uth.get_factor_dict_from_meta_file(cli_args.meta_file, cli_args.control, cli_args.formula[1:])
+        treatment_factor_dict = uth.get_factor_dict_from_meta_file(cli_args.meta_file, cli_args.treatment, cli_args.formula[1:])
  
     main(
         counts_dir=cli_args.counts_dir,
@@ -85,6 +92,8 @@ if __name__ == "__main__":
         treatment_pre=treatment_args.prefix,
         control_reps=control_args.reps,
         treatment_reps=treatment_args.reps,
+        control_factor_dict=control_factor_dict,
+        treatment_factor_dict=treatment_factor_dict,
         controlcountsmat=cli_args.controlcountsmat,
         treatmentcountsmat=cli_args.treatmentcountsmat,
         design_formula_components=cli_args.formula,

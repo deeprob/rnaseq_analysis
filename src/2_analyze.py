@@ -11,6 +11,7 @@ def main(
     controls,
     treatments,
     countsmats,
+    normcountsmats,
     deoutfiles,
     geneidtonamefiles,
     store_dir,
@@ -21,16 +22,20 @@ def main(
     # create appropriate directories
     qc_dir, enrich_dir = utq.create_dirs(store_dir)
 
-    # match lengths for libraries and countsmats | controls and deoutfiles | controls and geneidtonamefiles
+    # match lengths for libraries and countsmats | controls and deoutfiles | controls and geneidtonamefiles | controls and normalized counts files
     libraries, countsmats = utq.match_lengths(libraries, countsmats)
     controls, deoutfiles = utq.match_lengths(controls, deoutfiles)
     controls, geneidtonamefiles = utq.match_lengths(controls, geneidtonamefiles)
+    controls, normcountsmats = utq.match_lengths(controls, normcountsmats)
 
-    # create pca plot
+    # create pca plot for all libraries with raw read counts
     utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir, factor, pcaoutfile)
 
     # create volcano plots
     utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir, genenames)
+
+    # create library specific pca plots with normalized read counts
+    utq.create_lib_specific_pca_plots(de_dir, treatments, controls, normcountsmats, qc_dir)
 
     # get enriched go terms
     degenes_dir = ute.get_de_genes(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, enrich_dir, thresh=0.01)
@@ -50,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--treatments", type=str, help="The treatment library names for volcano plots", nargs="+")
     parser.add_argument("--countsmats", type=str, help="count matrix filebasenames", nargs="+", default=["counts.tsv"])
     parser.add_argument("--deoutfiles", type=str, help="diff exp outfilenames", nargs="+", default=["de_results.csv"])
+    parser.add_argument("--normcountsmats", type=str, help="normalized count matrix filebasenames", nargs="+", default=["meta_norm_counts.csv"])
     parser.add_argument("--geneidtonamefiles", type=str, help="diff exp gene id to name mappings", nargs="+", default=["geneid2name.csv"])
     parser.add_argument("--factor", action="store_true", help="whether to plot factor in pca plot")
     parser.add_argument("--pcaoutfile", type=str, default="library_pca", help="pca plot outfilename without extension")
@@ -67,6 +73,7 @@ if __name__ == "__main__":
         control_shorts,
         treatment_shorts,
         cli_args.countsmats,
+        cli_args.normcountsmats,
         cli_args.deoutfiles,
         cli_args.geneidtonamefiles,
         cli_args.store_dir,

@@ -84,6 +84,20 @@ def save_pca_plot(counts_dir, libraries, count_filenames, store_dir, factor, pca
     save_pdf(f, save_file)
     return
 
+def create_lib_specific_pca_plots_helper(de_dir, treatment, control, norm_counts_filebase, store_dir):
+    norm_counts_file = os.path.join(de_dir, "vs".join([treatment, control]), norm_counts_filebase)
+    norm_counts_df = pd.read_csv(norm_counts_file, index_col=0)
+    f = get_pca_plots_helper(norm_counts_df, False)
+    figure_dir = os.path.join(store_dir, "figures")
+    os.makedirs(figure_dir, exist_ok=True)
+    save_file = os.path.join(figure_dir, f'{treatment}vs{control}_pca.pdf')
+    save_pdf(f, save_file)
+    return
+
+def create_lib_specific_pca_plots(de_dir, treatments, controls, norm_counts_filebases, store_dir):
+    for t,c,n in zip(treatments, controls, norm_counts_filebases):
+        create_lib_specific_pca_plots_helper(de_dir, t, c, n, store_dir)
+    return
 
 ################
 # volcano plot #
@@ -172,4 +186,3 @@ def create_volcano_plots(de_dir, treatments, controls, deseq_filebases, geneidto
         create_volcano_plot_helper(de_dir, t, c, d, g, store_dir, genenames)
     return
 
-# ma plot

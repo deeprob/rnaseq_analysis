@@ -52,23 +52,23 @@ def make_meta_counts(
     gid2name_outfile = os.path.join(store_dir, "geneid2name.csv")
     gid2name_df.iloc[:-5].to_csv(gid2name_outfile, index=False, header=True)
     return list(meta_count_df.columns), store_dir, meta_counts_outfile
-    
-def get_colname_conditions(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components):
-    control_conditions = [[control_pre] + control_rep.split("_")[:len(design_formula_components)-1] for control_rep in control_reps.split()]
-    treatment_conditions = [[treatment_pre] + treatment_rep.split("_")[:len(design_formula_components)-1] for treatment_rep in treatment_reps.split()]
-    print(control_conditions)
-    print(treatment_conditions)
-    conditions = control_conditions + treatment_conditions
-    assert len(colnames) == len(conditions)
-    return conditions
 
-def generate_design_matrix(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components, savefile):
-    conditions = get_colname_conditions(colnames, control_pre, treatment_pre, control_reps, treatment_reps, design_formula_components)
-    with open(savefile, "w") as f:
-        f.write(f",{','.join(design_formula_components)}\n")
-        for col,line in zip(colnames, conditions):
-            f.write(",".join([col]+line))
-            f.write("\n")
+def generate_design_matrix_helper(lib_pre, lib_reps, lib_factor_dict, design_formula_components):
+    if lib_factor_dict:
+        # check number of factors and lib replicates are the same
+        for k, v in lib_factor_dict.items():
+            assert len(v) == len(lib_reps.split())
+    lib_factor_dict[design_formula_components[0]] = [lib_pre for _ in range(len(lib_reps.split()))]
+    lib_dm_df = pd.DataFrame(data=lib_factor_dict)
+    return lib_dm_df
+
+def generate_design_matrix(colnames, control_pre, treatment_pre, control_reps, treatment_reps, control_factor_dict, treatment_factor_dict, design_formula_components, savefile):
+    control_df = generate_design_matrix_helper(control_pre, control_reps, control_factor_dict, design_formula_components)
+    treatment_df = generate_design_matrix_helper(treatment_pre, treatment_reps, treatment_factor_dict, design_formula_components)
+    dm_df = pd.concat([control_df, treatment_df], axis=0)
+    assert len(dm_df) == len(colnames)
+    dm_df.index = colnames
+    dm_df.loc[:, design_formula_components].to_csv(savefile, index=True, header=True)
     return
 	
 def run_deseq2(counts_file, counts_cols, designfile, design_formula, contrast, de_file, normcts_file):

@@ -30,6 +30,10 @@ def create_args(meta_file, libname):
     )
     return args
 
+def get_factor_dict_from_meta_file(meta_file, libname, factornames):
+    meta_dict = load_json(meta_file)
+    factor_dict = {fn: meta_dict[libname][fn].split() for fn in factornames}
+    return factor_dict
 
 ###################
 # file processing #
