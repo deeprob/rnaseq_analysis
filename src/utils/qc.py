@@ -45,7 +45,7 @@ def get_pca_components(meta_df, designmatrixfile):
     })
     if dm_df.shape[1]>1:
         pca_df["factor"] = [dm_df.loc[c, dm_df.columns[1]] for c in meta_df_norm.columns]
-    return pca_df, dm_df.columns[1]
+    return pca_df, dm_df.columns[1] if dm_df.shape[1]>1 else ""
 
 def get_pca_plots_helper(meta_df, designmatrixfile):
     pca_df, factor = get_pca_components(meta_df, designmatrixfile) 
