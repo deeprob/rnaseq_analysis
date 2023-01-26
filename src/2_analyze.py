@@ -5,41 +5,28 @@ import utils.helper as uth
 import utils.enrich as ute
 
 def main(
-    counts_dir,
     de_dir,
-    libraries,
-    controls,
-    treatments,
-    countsmats,
-    normcountsmats,
-    deoutfiles,
-    geneidtonamefiles,
+    control_short,
+    treatment_short,
+    normcountsmat,
+    deoutfile,
+    geneidtonamefile,
     store_dir,
     genenames,
-    factor,
-    pcaoutfile,
+    designmatrixfile,
     ):
     # create appropriate directories
     qc_dir, enrich_dir = utq.create_dirs(store_dir)
 
-    # match lengths for libraries and countsmats | controls and deoutfiles | controls and geneidtonamefiles | controls and normalized counts files
-    libraries, countsmats = utq.match_lengths(libraries, countsmats)
-    controls, deoutfiles = utq.match_lengths(controls, deoutfiles)
-    controls, geneidtonamefiles = utq.match_lengths(controls, geneidtonamefiles)
-    controls, normcountsmats = utq.match_lengths(controls, normcountsmats)
+    # create volcano plot
+    utq.create_volcano_plot(de_dir, treatment_short, control_short, deoutfile, geneidtonamefile, qc_dir, genenames)
 
-    # create pca plot for all libraries with raw read counts
-    utq.save_pca_plot(counts_dir, libraries, countsmats, qc_dir, factor, pcaoutfile)
-
-    # create volcano plots
-    utq.create_volcano_plots(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, qc_dir, genenames)
-
-    # create library specific pca plots with normalized read counts
-    utq.create_lib_specific_pca_plots(de_dir, treatments, controls, normcountsmats, qc_dir)
+    # create library specific pca plot with normalized read counts
+    utq.create_lib_specific_pca_plot(de_dir, treatment_short, control_short, normcountsmat, designmatrixfile, qc_dir)
 
     # get enriched go terms
-    degenes_dir = ute.get_de_genes(de_dir, treatments, controls, deoutfiles, geneidtonamefiles, enrich_dir, thresh=0.01)
-    ute.run_enrichment(degenes_dir, treatments, controls, enrich_dir)
+    degenes_dir = ute.get_de_genes(de_dir, treatment_short, control_short, deoutfile, geneidtonamefile, enrich_dir, thresh=0.01)
+    ute.run_enrichment(degenes_dir, treatment_short, control_short, enrich_dir)
 
     return
 
@@ -47,37 +34,28 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='RNASeq Analysis pipeline.')
     parser.add_argument("meta_file", type=str, help="the meta file path with library information")
-    parser.add_argument("counts_dir", type=str, help="Provide the input directory where RNASeq counts files are stored")
     parser.add_argument("de_dir", type=str, help="Provide the input directory where RNASeq de files are stored")
     parser.add_argument("store_dir", type=str, help="Directory where RNASeq DE output will be stored")
-    parser.add_argument("-l", "--libraries", type=str, help="All library names for pca plot", nargs="+")
-    parser.add_argument("-c", "--controls", type=str, help="The control library names for volcano plots", nargs="+")
-    parser.add_argument("-t", "--treatments", type=str, help="The treatment library names for volcano plots", nargs="+")
-    parser.add_argument("--countsmats", type=str, help="count matrix filebasenames", nargs="+", default=["counts.tsv"])
-    parser.add_argument("--deoutfiles", type=str, help="diff exp outfilenames", nargs="+", default=["de_results.csv"])
-    parser.add_argument("--normcountsmats", type=str, help="normalized count matrix filebasenames", nargs="+", default=["meta_norm_counts.csv"])
-    parser.add_argument("--geneidtonamefiles", type=str, help="diff exp gene id to name mappings", nargs="+", default=["geneid2name.csv"])
-    parser.add_argument("--factor", action="store_true", help="whether to plot factor in pca plot")
-    parser.add_argument("--pcaoutfile", type=str, default="library_pca", help="pca plot outfilename without extension")
+    parser.add_argument("control", type=str, help="The control library name to generate analysis results")
+    parser.add_argument("treatment", type=str, help="The treatment library names to generate analysis results")
+    parser.add_argument("--deoutfile", type=str, help="diff exp outfilename", default="de_results.csv")
+    parser.add_argument("--normcountsmat", type=str, help="normalized count matrix filebasename", default="meta_norm_counts.csv")
+    parser.add_argument("--geneidtonamefile", type=str, help="diff exp gene id to name mappings", default="geneid2name.csv")
+    parser.add_argument("--designmatrixfile", help="design matrix filename required to plot factors in pca plot", type=str, default="design_mat.csv")
     parser.add_argument("--genenames", type=str, help="Gene names of interest that will be plotted in the volcano", nargs="+", default=[])
 
     cli_args = parser.parse_args()
-    lib_shorts = [uth.create_args(cli_args.meta_file, lib).shortform for lib in cli_args.libraries]
-    control_shorts = [uth.create_args(cli_args.meta_file, lib).shortform for lib in cli_args.controls]
-    treatment_shorts = [uth.create_args(cli_args.meta_file, lib).shortform for lib in cli_args.treatments]
+    control_args = uth.create_args(cli_args.meta_file, cli_args.control)
+    treatment_args = uth.create_args(cli_args.meta_file, cli_args.treatment)
 
     main(
-        cli_args.counts_dir,
         cli_args.de_dir,
-        lib_shorts,
-        control_shorts,
-        treatment_shorts,
-        cli_args.countsmats,
-        cli_args.normcountsmats,
-        cli_args.deoutfiles,
-        cli_args.geneidtonamefiles,
+        control_args.shortform,
+        treatment_args.shortform,
+        cli_args.normcountsmat,
+        cli_args.deoutfile,
+        cli_args.geneidtonamefile,
         cli_args.store_dir,
         cli_args.genenames,
-        cli_args.factor,
-        cli_args.pcaoutfile
+        cli_args.designmatrixfile,
     )

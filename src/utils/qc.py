@@ -24,39 +24,31 @@ def create_dirs(store_dir):
     os.makedirs(enrich_dir, exist_ok=True)
     return qc_dir, enrich_dir
 
-def match_lengths(iter1, iter2):
-    if len(iter2) != len(iter1):
-        iter2 = [iter2[0] for _ in range(len(iter1))]
-    return iter1, iter2
-
 ############
 # pca plot #
 ############
 
-def read_counts_file(counts_dir, lib, filename):
-    df = pd.read_csv(os.path.join(counts_dir, lib, filename), sep="\t", skipfooter=5, index_col=0, engine="python")
-    return df.drop(columns="gene_name")
+def read_design_matrix(filename):
+    dm = pd.read_csv(filename, index_col=0)
+    return dm
 
-def get_meta_counts(counts_dir, libraries, count_filenames):
-    df = pd.concat([read_counts_file(counts_dir, lib, cf) for lib, cf in zip(libraries, count_filenames)], axis=1)
-    return df
-
-def get_pca_components(meta_df, factor=False):
+def get_pca_components(meta_df, designmatrixfile):
     meta_df_norm = (meta_df-meta_df.mean())/meta_df.std()
+    dm_df = read_design_matrix(designmatrixfile)
     pca = PCA(n_components=2)
     components = pca.fit_transform(meta_df_norm.T)
     pca_df = pd.DataFrame({
         "lib_info": meta_df_norm.columns,
         "pca_comp1": components[:, 0],
         "pca_comp2": components[:, 1],
-        "library": [c.split("_")[0] for c in meta_df_norm.columns],
+        "library": [dm_df.loc[c, dm_df.columns[0]] for c in meta_df_norm.columns],
     })
-    if factor:
-        pca_df["factor"] = pca_df.lib_info.str.split("_", expand=True)[1]
-    return pca_df
+    if dm_df.shape[1]>1:
+        pca_df["factor"] = [dm_df.loc[c, dm_df.columns[1]] for c in meta_df_norm.columns]
+    return pca_df, dm_df.columns[1]
 
-def get_pca_plots_helper(meta_df, factor=False):
-    pca_df = get_pca_components(meta_df, factor) 
+def get_pca_plots_helper(meta_df, designmatrixfile):
+    pca_df, factor = get_pca_components(meta_df, designmatrixfile) 
     fig, ax = plt.subplots(1, 1, figsize=(8,4), sharex=True, sharey=True)
     sns.scatterplot(
         data=pca_df, 
@@ -75,28 +67,15 @@ def get_pca_plots_helper(meta_df, factor=False):
     ax.legend(loc="lower center", markerscale=2,  prop={'size': 12})
     return fig
 
-def save_pca_plot(counts_dir, libraries, count_filenames, store_dir, factor, pcaoutfile):
-    meta_df = get_meta_counts(counts_dir, libraries, count_filenames)
-    f = get_pca_plots_helper(meta_df, factor)
-    store_dir = os.path.join(store_dir, "figures")
-    os.makedirs(store_dir, exist_ok=True)
-    save_file = os.path.join(store_dir, f"{pcaoutfile}.pdf")
-    save_pdf(f, save_file)
-    return
-
-def create_lib_specific_pca_plots_helper(de_dir, treatment, control, norm_counts_filebase, store_dir):
+def create_lib_specific_pca_plot(de_dir, treatment, control, norm_counts_filebase, designmatrixfile, store_dir):
     norm_counts_file = os.path.join(de_dir, "vs".join([treatment, control]), norm_counts_filebase)
     norm_counts_df = pd.read_csv(norm_counts_file, index_col=0)
-    f = get_pca_plots_helper(norm_counts_df, False)
+    designmatrixfile = os.path.join(de_dir, "vs".join([treatment, control]), designmatrixfile)
+    f = get_pca_plots_helper(norm_counts_df, designmatrixfile)
     figure_dir = os.path.join(store_dir, "figures")
     os.makedirs(figure_dir, exist_ok=True)
     save_file = os.path.join(figure_dir, f'{treatment}vs{control}_pca.pdf')
     save_pdf(f, save_file)
-    return
-
-def create_lib_specific_pca_plots(de_dir, treatments, controls, norm_counts_filebases, store_dir):
-    for t,c,n in zip(treatments, controls, norm_counts_filebases):
-        create_lib_specific_pca_plots_helper(de_dir, t, c, n, store_dir)
     return
 
 ################
@@ -162,7 +141,7 @@ def create_volcano_fig_raw(df_volcano, lfc_thresh=1, pv_thresh=0.01, gene_set=[]
     axes.collections[0].set_rasterized(True)
     return fig
 
-def create_volcano_plot_helper(de_dir, treatment, control, deseq_filebase, gid2n_filebase, store_dir, gene_set=[]):
+def create_volcano_plot(de_dir, treatment, control, deseq_filebase, gid2n_filebase, store_dir, gene_set=[]):
     # make appropriate dirs to store files
     table_dir = os.path.join(store_dir, "tables")
     os.makedirs(table_dir, exist_ok=True)
@@ -181,8 +160,4 @@ def create_volcano_plot_helper(de_dir, treatment, control, deseq_filebase, gid2n
     save_pdf(vfig, save_file)
     return
 
-def create_volcano_plots(de_dir, treatments, controls, deseq_filebases, geneidtonamefiles, store_dir, genenames):
-    for t,c,d,g in zip(treatments, controls, deseq_filebases, geneidtonamefiles):
-        create_volcano_plot_helper(de_dir, t, c, d, g, store_dir, genenames)
-    return
 

@@ -31,11 +31,10 @@ def get_de_genes_helper(de_dir, treatment, control, deseq_filebase, gid2n_fileba
             f.write(f"{g}\n")
     return
 
-def get_de_genes(de_dir, treatments, controls, deseq_filebases, gid2n_filebases, store_dir, thresh=0.01):
+def get_de_genes(de_dir, treatment, control, deseq_filebase, gid2n_filebase, store_dir, thresh=0.01):
     degenes_dir = os.path.join(store_dir, "tables")
     os.makedirs(degenes_dir, exist_ok=True)
-    for t,c,d,g in zip(treatments, controls, deseq_filebases, gid2n_filebases):
-        get_de_genes_helper(de_dir, t, c, d, g, degenes_dir, thresh)
+    get_de_genes_helper(de_dir, treatment, control, deseq_filebase, gid2n_filebase, degenes_dir, thresh)
     return degenes_dir
 
 
@@ -51,19 +50,18 @@ def run_enrichment_helper(gene_in, gseaout_file, keggout_file, gseafigout_file, 
     subprocess.run(cmd)
     return
 
-def run_enrichment(de_genes_dir, treatments, controls, store_dir):
+def run_enrichment(de_genes_dir, treatment, control, store_dir):
     table_dir = os.path.join(store_dir, "tables")
     os.makedirs(store_dir, exist_ok=True)
     fig_dir = os.path.join(store_dir, "figures")
     os.makedirs(fig_dir, exist_ok=True)
     tmp_dir = os.path.join(store_dir, "tmp")
     os.makedirs(tmp_dir, exist_ok=True)
-    for t, c in zip(treatments, controls):
-        gene_in = os.path.join(de_genes_dir, f'{t}vs{c}_sig_genes.txt')
-        gseaout_file = os.path.join(table_dir, f'{t}vs{c}_gsea.csv')
-        keggout_file = os.path.join(table_dir, f'{t}vs{c}_kegg.csv')
-        gseafigout_file = os.path.join(fig_dir, f'{t}vs{c}_gsea.pdf')
-        keggfigout_file = os.path.join(fig_dir, f'{t}vs{c}_kegg.pdf')
-        run_enrichment_helper(gene_in, gseaout_file, keggout_file, gseafigout_file, keggfigout_file, tmp_dir)
+    gene_in = os.path.join(de_genes_dir, f'{treatment}vs{control}_sig_genes.txt')
+    gseaout_file = os.path.join(table_dir, f'{treatment}vs{control}_gsea.csv')
+    keggout_file = os.path.join(table_dir, f'{treatment}vs{control}_kegg.csv')
+    gseafigout_file = os.path.join(fig_dir, f'{treatment}vs{control}_gsea.pdf')
+    keggfigout_file = os.path.join(fig_dir, f'{treatment}vs{control}_kegg.pdf')
+    run_enrichment_helper(gene_in, gseaout_file, keggout_file, gseafigout_file, keggfigout_file, tmp_dir)
     return
 
