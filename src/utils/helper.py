@@ -39,11 +39,11 @@ def get_factor_dict_from_meta_file(meta_file, libname, factornames):
 # file processing #
 ###################
 
-def create_dirs(root_dir, lib_short):
-    trim_dir = os.path.join(root_dir, "trim", lib_short)
-    align_dir = os.path.join(root_dir, "align", lib_short)
-    count_dir = os.path.join(root_dir, "count", lib_short)
-    tmp_dir = os.path.join(root_dir, "tmp", lib_short)
+def create_dirs(store_dir):
+    trim_dir = os.path.join(store_dir, "trim")
+    align_dir = os.path.join(store_dir, "align")
+    count_dir = os.path.join(store_dir, "count")
+    tmp_dir = os.path.join(store_dir, "tmp")
 
     os.makedirs(trim_dir, exist_ok=True)
     os.makedirs(align_dir, exist_ok=True)
@@ -51,48 +51,81 @@ def create_dirs(root_dir, lib_short):
     os.makedirs(tmp_dir, exist_ok=True)
     return trim_dir, align_dir, count_dir, tmp_dir
 
-def parse_rep_and_pairs(lib_reps, lib_pairs):
-    lib_reps = lib_reps.split()
-    lib_pairs = lib_pairs.split()
-    return lib_reps, lib_pairs  
+
+############
+# trimming #
+############
+
+# TODO: add adapter sequence path option here
+def trim_reads_helper(read_pair_1, read_pair_2, out_pair_1, out_pair_2, out_unpaired_1, out_unpaired_2, nthreads=64):
+    # trim reads using trimmomatic
+    # TODO: take adapter sequence file as input
+    path_to_adapter_sequences_se = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-SE.fa"
+    path_to_adapter_sequences_pe = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-PE.fa"
+
+    if read_pair_2:
+        # call paired end trimmomatic
+        subprocess.call(["trimmomatic", "PE", "-threads", f"{nthreads}", "-phred33", 
+                        f"{read_pair_1}", f"{read_pair_2}", f"{out_pair_1}", f"{out_unpaired_1}", f"{out_pair_2}", f"{out_unpaired_2}",   
+                        f"ILLUMINACLIP:{path_to_adapter_sequences_pe}:2:30:10:7:true", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
+    else:
+        # call single end trimmomatic
+        subprocess.call(["trimmomatic", "SE", "-threads", f"{nthreads}", "-phred33", 
+                        f"{read_pair_1}", f"{out_pair_1}",    
+                        f"ILLUMINACLIP:{path_to_adapter_sequences_se}:2:30:10", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
+
+    return
+
+def trim_reads(in_dir, read_pair_1, read_pair_2, suff, trim_dir, threads):
+    trim_paired_suff = "fastq.gz"
+    trim_unpaired_suff = "unpaired.fastq.gz"
+    for rep in reps:
+        read_pair_1 = os.path.join(in_dir, read_pair_1)
+        
+        out_paired_1 = os.path.join(trim_dir, "_".join([pre, rep, pairs[0]]) + f".{trim_paired_suff}")
+        out_unpaired_1 = os.path.join(trim_dir, "_".join([pre, rep, pairs[0]]) + f".{trim_unpaired_suff}")
+        read_pair_2 = ""
+        out_paired_2 = ""
+        out_unpaired_2 = ""
+        if read_pair_2:
+            read_pair_2 = os.path.join(in_dir, "_".join([pre, rep, pairs[1]]) + f".{suff}")
+            out_paired_2 = os.path.join(trim_dir, "_".join([pre, rep, pairs[1]]) + f".{trim_paired_suff}")
+            out_unpaired_2 = os.path.join(trim_dir, "_".join([pre, rep, pairs[1]]) + f".{trim_unpaired_suff}")
+        trim_reads_helper(read_pair_1, read_pair_2, out_paired_1, out_paired_2, out_unpaired_1, out_unpaired_2, threads)
+    return trim_paired_suff
 
 
+#############
+# alignment #
+#############
 
-# def get_file_base(file_path):
-#     file_pattern = re.compile("(.+)\.(fastq|fq)\.gz")
-#     m = re.match(file_pattern, os.path.basename(file_path))
-#     return m.group(1)
+def create_star_index(genome_file, gtf_file, storage_dir, nthreads=64):
+    # create index for star aligner
+    subprocess.call(["STAR", "--runMode", "genomeGenerate",  "--genomeDir", f"{storage_dir}",
+                    "--genomeFastaFiles", f"{genome_file}", "--sjdbGTFfile", f"{gtf_file}", "--sjdbOverhang", "100", 
+                    "--runThreadN", f"{nthreads}"])
+    return   
 
-# def get_normalized_counts(counts_file):
-#     ncounts_file = os.path.splitext(counts_file)[0] + "_normalized.tsv"
-#     command = ["Rscript", os.path.join(CURRENT_DIR, "normalize.R"), counts_file, ncounts_file]
-#     subprocess.call(command)
-#     return ncounts_file
 
-# def get_log_cpm(ncounts_file):
-#     logcpm_file = os.path.splitext(ncounts_file)[0] + "_lognormalized.tsv"
-#     command = ["Rscript", os.path.join(CURRENT_DIR, "lognormalize.R"), ncounts_file, logcpm_file]
-#     subprocess.call(command)
-#     return logcpm_file
+def align_helper(read_files, output_prefix, starindex_dir, nthreads=64):
+    # align using star
+    read_files_list = read_files.split()
+    command = ["STAR", "--genomeDir", f"{starindex_dir}", "--runThreadN", f"{nthreads}", "--outFileNamePrefix", f"{output_prefix}", "--readFilesIn"]
+    command += read_files_list
+    command += ["--outSAMtype", "BAM", "SortedByCoordinate", "--outSAMunmapped", "Within", "--outSAMattributes", "Standard", "--readFilesCommand", "zcat"]
+    subprocess.call(command)
+    return
 
-# def infer_counts_columns_helper(filename):
-#     filebasename = os.path.basename(filename)
-#     geno, sex, biorep, techrep, _ = filebasename.split("_")
-#     return geno, sex, biorep, techrep
 
-# def infer_counts_columns(filenames):
-#     column_list = []
-#     for fn in filenames:
-#         g, s, b, t = infer_counts_columns_helper(fn)
-#         column_list.append("_".join([g,s,b,t]))
-#     return column_list
-
-# def generate_design_matrix(colnames, savefile):
-#     # genotype, sex, biorep
-#     matrix = [list(map(str, colname.split("_")[:3])) for colname in colnames]
-#     with open(savefile, "w") as f:
-#         f.write(",genotype,sex,biorep\n")
-#         for col,line in zip(colnames, matrix):
-#             f.write(",".join([col]+line))
-#             f.write("\n")
-#     return
+def align(in_dir, pre, reps, pairs, suff, align_dir, index_dir, threads):
+    align_suff = "Aligned.sortedByCoord.out.bam"
+    for rep in reps:
+        read_pair_1 = os.path.join(in_dir, "_".join([pre, rep, pairs[0]]) + f".{suff}")
+        read_pair_2 = ""
+        read_files = read_pair_1
+        if len(pairs)==2:
+            read_pair_2 = os.path.join(in_dir, "_".join([pre, rep, pairs[1]]) + f".{suff}")
+            read_files = " ".join([read_pair_1, read_pair_2])
+        align_out_prefix = os.path.join(align_dir, "_".join([pre, rep+"."]))
+        align_helper(read_files, align_out_prefix, index_dir, threads)
+    return align_suff

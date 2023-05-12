@@ -10,13 +10,10 @@ def main(
     raw_dir,
     store_dir,
     index_dir,
-    lib_prefix,
-    lib_reps,
-    lib_pairs,
-    lib_suffix,
-    lib_short,
+    read1_file, 
+    read2_file,
     genome_file,
-    gtf_file, 
+    gtf_file,
     counts_matrix,
     index_flag,
     merge_flag,
@@ -26,13 +23,11 @@ def main(
     # create appropriate directories
     trim_dir, align_dir, count_dir, tmp_dir = uth.create_dirs(store_dir, lib_short)
 
-    # parse reps and pairs
-    lib_reps, lib_pairs = uth.parse_rep_and_pairs(lib_reps, lib_pairs)
 
     # preprocess for align
     if index_flag:
         print("Creating STAR index ...")
-        uta.create_star_index(genome_file, gtf_file, index_dir)
+        uth.create_star_index(genome_file, gtf_file, index_dir)
 
     # trim
     print("Trimming ...")
