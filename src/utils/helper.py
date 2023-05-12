@@ -16,25 +16,6 @@ def load_json(json_file):
         jdict = json.load(f)
     return jdict
 
-def create_args(meta_file, libname):
-    meta_dict = load_json(meta_file)
-    args = Namespace(
-        # from metadata file
-        prefix = meta_dict[libname]["prefix"],
-        reps = meta_dict[libname]["reps"],
-        pairs= meta_dict[libname]["readpairs"],
-        suffix = meta_dict[libname]["fastqsuffix"],
-        shortform = meta_dict[libname]["shortform"],
-        reference_genome = meta_dict["genome"]["fasta"],
-        reference_genome_gtf = meta_dict["genome"]["gtf"],
-    )
-    return args
-
-def get_factor_dict_from_meta_file(meta_file, libname, factornames):
-    meta_dict = load_json(meta_file)
-    factor_dict = {fn: meta_dict[libname][fn].split() for fn in factornames}
-    return factor_dict
-
 ###################
 # file processing #
 ###################
@@ -57,42 +38,41 @@ def create_dirs(store_dir):
 ############
 
 # TODO: add adapter sequence path option here
-def trim_reads_helper(read_pair_1, read_pair_2, out_pair_1, out_pair_2, out_unpaired_1, out_unpaired_2, nthreads=64):
+def trim_reads_helper(read_pair_1, read_pair_2, out_pair_1, out_pair_2, out_unpaired_1, out_unpaired_2, adapter_file, nthreads=64):
     # trim reads using trimmomatic
-    # TODO: take adapter sequence file as input
-    path_to_adapter_sequences_se = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-SE.fa"
-    path_to_adapter_sequences_pe = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-PE.fa"
+    # path_to_adapter_sequences_se = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-SE.fa"
+    # path_to_adapter_sequences_pe = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-PE.fa"
 
     if read_pair_2:
         # call paired end trimmomatic
         subprocess.call(["trimmomatic", "PE", "-threads", f"{nthreads}", "-phred33", 
                         f"{read_pair_1}", f"{read_pair_2}", f"{out_pair_1}", f"{out_unpaired_1}", f"{out_pair_2}", f"{out_unpaired_2}",   
-                        f"ILLUMINACLIP:{path_to_adapter_sequences_pe}:2:30:10:7:true", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
+                        f"ILLUMINACLIP:{adapter_file}:2:30:10:7:true", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
     else:
         # call single end trimmomatic
         subprocess.call(["trimmomatic", "SE", "-threads", f"{nthreads}", "-phred33", 
                         f"{read_pair_1}", f"{out_pair_1}",    
-                        f"ILLUMINACLIP:{path_to_adapter_sequences_se}:2:30:10", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
+                        f"ILLUMINACLIP:{adapter_file}:2:30:10", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
 
     return
 
-def trim_reads(in_dir, read_pair_1, read_pair_2, suff, trim_dir, threads):
+
+def trim_reads(in_dir, read_pair_1, read_pair_2, trim_dir, adapter_file, threads):
     trim_paired_suff = "fastq.gz"
     trim_unpaired_suff = "unpaired.fastq.gz"
-    for rep in reps:
-        read_pair_1 = os.path.join(in_dir, read_pair_1)
-        
-        out_paired_1 = os.path.join(trim_dir, "_".join([pre, rep, pairs[0]]) + f".{trim_paired_suff}")
-        out_unpaired_1 = os.path.join(trim_dir, "_".join([pre, rep, pairs[0]]) + f".{trim_unpaired_suff}")
-        read_pair_2 = ""
-        out_paired_2 = ""
-        out_unpaired_2 = ""
-        if read_pair_2:
-            read_pair_2 = os.path.join(in_dir, "_".join([pre, rep, pairs[1]]) + f".{suff}")
-            out_paired_2 = os.path.join(trim_dir, "_".join([pre, rep, pairs[1]]) + f".{trim_paired_suff}")
-            out_unpaired_2 = os.path.join(trim_dir, "_".join([pre, rep, pairs[1]]) + f".{trim_unpaired_suff}")
-        trim_reads_helper(read_pair_1, read_pair_2, out_paired_1, out_paired_2, out_unpaired_1, out_unpaired_2, threads)
-    return trim_paired_suff
+    read_pair_1 = os.path.join(in_dir, read_pair_1)
+    out_paired_1 = os.path.splitext(os.path.basename(read_pair_1))[0]
+    out_paired_1 = os.path.join(trim_dir, out_paired_1 + f".{trim_paired_suff}")
+    out_unpaired_1 = os.path.join(trim_dir, out_paired_1 + f".{trim_unpaired_suff}")
+    out_paired_2 = ""
+    out_unpaired_2 = ""
+    if read_pair_2:
+        read_pair_2 = os.path.join(in_dir, read_pair_2)
+        out_paired_2 = os.path.splitext(os.path.basename(read_pair_2))[0]
+        out_paired_2 = os.path.join(trim_dir, out_paired_2 + f".{trim_paired_suff}")
+        out_unpaired_2 = os.path.join(trim_dir, out_paired_2 + f".{trim_unpaired_suff}")
+    trim_reads_helper(read_pair_1, read_pair_2, out_paired_1, out_paired_2, out_unpaired_1, out_unpaired_2, adapter_file, threads)
+    return out_paired_1, out_paired_2, out_unpaired_1, out_unpaired_2
 
 
 #############
@@ -117,15 +97,37 @@ def align_helper(read_files, output_prefix, starindex_dir, nthreads=64):
     return
 
 
-def align(in_dir, pre, reps, pairs, suff, align_dir, index_dir, threads):
+def align(in_dir, read_pair_1, read_pair_2, align_dir, index_dir, threads):
     align_suff = "Aligned.sortedByCoord.out.bam"
-    for rep in reps:
-        read_pair_1 = os.path.join(in_dir, "_".join([pre, rep, pairs[0]]) + f".{suff}")
-        read_pair_2 = ""
-        read_files = read_pair_1
-        if len(pairs)==2:
-            read_pair_2 = os.path.join(in_dir, "_".join([pre, rep, pairs[1]]) + f".{suff}")
-            read_files = " ".join([read_pair_1, read_pair_2])
-        align_out_prefix = os.path.join(align_dir, "_".join([pre, rep+"."]))
-        align_helper(read_files, align_out_prefix, index_dir, threads)
-    return align_suff
+    read_files = read_pair_1
+    if read_pair_2:
+        read_files = " ".join([read_pair_1, read_pair_2])
+    align_out_prefix = os.path.basename(read_pair_1).replace(".fastq.gz", align_suff)
+    align_out_prefix = os.path.join(align_dir, align_out_prefix)
+    align_helper(read_files, align_out_prefix, index_dir, threads)
+    return align_out_prefix
+
+
+############
+# counting #
+############
+
+def count_helper(alignment_files, counts_cols, gtf_file, output_file, paired=False, threads=64):
+    # count using htseq
+    with open(output_file, "w") as outfile:
+        outfile.write("\t".join(["gene_id", "gene_name"] + counts_cols) + "\n")
+
+    with open(output_file, "a") as outfile:
+        if not paired:
+            command = ["htseq-count", "-f", "bam", "-s", "no", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
+        else:
+            command = ["htseq-count", "-f", "bam", "-s", "yes", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
+        subprocess.run(command, stdout=outfile)
+    return
+
+def count(in_dir, aligned_file, paired, gtf_file, count_dir, counts_matrix, threads):
+    aligned_files = [aligned_file]
+    counts_cols = [os.path.splitext(os.path.basename(aligned_file))[0].replace("Aligned.sortedByCoord.out.bam", "")]
+    count_out_file = os.path.join(count_dir, counts_matrix)
+    count_helper(aligned_files, counts_cols, gtf_file, count_out_file, paired=paired, threads=threads)
+    return count_out_file
