@@ -35,7 +35,7 @@ The design matrix contains information about each sample. The sample names provi
 
 Step 6: Run counts to de 
 ```bash
-$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest python3 counts_to_de.py --treatment_names treated_rep1_colname treated_rep2_colname treated_rep3_colname --control_names control_rep1_colname control_rep2_colname control_rep3_colname --design_matrix /data/relative/path/inside/project_dir
+$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest python3 counts_to_de.py --treatment_names treated_rep1_colname treated_rep2_colname treated_rep3_colname --control_names control_rep1_colname control_rep2_colname control_rep3_colname --design_matrix /data/relative/path/inside/project_dir/to/design_matrix.csv
 ```
 
 # Test pipeline
