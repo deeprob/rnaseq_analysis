@@ -21,7 +21,7 @@ outfilename = args[6]
 normcts_file = args[7]
 
 # read count file
-cnt_table <- read.table(infilename, sep="\t", row.names=1, header=TRUE)
+cnt_table <- read.table(infilename, sep=",", row.names=1, header=TRUE)
 cnt_cols = unlist(strsplit(incols, ","))
 cnt_table <- cnt_table[, cnt_cols]
 # design matrix or treatment data construction

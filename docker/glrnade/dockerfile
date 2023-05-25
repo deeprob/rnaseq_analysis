@@ -1,0 +1,35 @@
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# install R, python, rnacounts packages
+RUN apt-get update && apt-get install -y \
+    build-essential \ 
+    r-base \
+    python3.6 \
+    python3-pip \
+    python3-setuptools \
+    python3-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \ 
+    libxml2-dev \
+    trimmomatic \
+    rna-star \
+    python-htseq \
+    unzip \
+    wget && \
+    rm -rf /var/lib/apt/lists/*    
+
+WORKDIR /rnacounts
+
+COPY requirements.txt /rnacounts/requirements.txt
+
+RUN pip3 install -r requirements.txt
+
+# install deseq2
+COPY install_packages.R /rnacounts/install_packages.R
+
+RUN Rscript install_packages.R
+
+# copy all source files
+COPY src/ /rnacounts

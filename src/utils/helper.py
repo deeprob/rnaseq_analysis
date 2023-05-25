@@ -32,25 +32,25 @@ def create_dirs(store_dir):
     os.makedirs(tmp_dir, exist_ok=True)
     return trim_dir, align_dir, count_dir, tmp_dir
 
+def remove_ext(filename):
+    find = re.compile(r"^(.*?)\..*")
+    basename = re.match(find, filename).group(1)
+    return basename
 
 ############
 # trimming #
 ############
 
-# TODO: add adapter sequence path option here
 def trim_reads_helper(read_pair_1, read_pair_2, out_pair_1, out_pair_2, out_unpaired_1, out_unpaired_2, adapter_file, nthreads=64):
     # trim reads using trimmomatic
-    # path_to_adapter_sequences_se = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-SE.fa"
-    # path_to_adapter_sequences_pe = "/data5/deepro/miniconda3/envs/rnaseq/share/trimmomatic-0.39-2/adapters/TruSeq3-PE.fa"
-
     if read_pair_2:
         # call paired end trimmomatic
-        subprocess.call(["trimmomatic", "PE", "-threads", f"{nthreads}", "-phred33", 
+        subprocess.call(["TrimmomaticPE", "-threads", f"{nthreads}", "-phred33", 
                         f"{read_pair_1}", f"{read_pair_2}", f"{out_pair_1}", f"{out_unpaired_1}", f"{out_pair_2}", f"{out_unpaired_2}",   
                         f"ILLUMINACLIP:{adapter_file}:2:30:10:7:true", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
     else:
         # call single end trimmomatic
-        subprocess.call(["trimmomatic", "SE", "-threads", f"{nthreads}", "-phred33", 
+        subprocess.call(["TrimmomaticSE", "-threads", f"{nthreads}", "-phred33", 
                         f"{read_pair_1}", f"{out_pair_1}",    
                         f"ILLUMINACLIP:{adapter_file}:2:30:10", "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:20", "MINLEN:51"])
 
@@ -61,14 +61,14 @@ def trim_reads(in_dir, read_pair_1, read_pair_2, trim_dir, adapter_file, threads
     trim_paired_suff = "fastq.gz"
     trim_unpaired_suff = "unpaired.fastq.gz"
     read_pair_1 = os.path.join(in_dir, read_pair_1)
-    out_paired_1 = os.path.splitext(os.path.basename(read_pair_1))[0]
+    out_paired_1 = remove_ext(os.path.basename(read_pair_1))
     out_paired_1 = os.path.join(trim_dir, out_paired_1 + f".{trim_paired_suff}")
     out_unpaired_1 = os.path.join(trim_dir, out_paired_1 + f".{trim_unpaired_suff}")
     out_paired_2 = ""
     out_unpaired_2 = ""
     if read_pair_2:
         read_pair_2 = os.path.join(in_dir, read_pair_2)
-        out_paired_2 = os.path.splitext(os.path.basename(read_pair_2))[0]
+        out_paired_2 = remove_ext(os.path.basename(read_pair_2))
         out_paired_2 = os.path.join(trim_dir, out_paired_2 + f".{trim_paired_suff}")
         out_unpaired_2 = os.path.join(trim_dir, out_paired_2 + f".{trim_unpaired_suff}")
     trim_reads_helper(read_pair_1, read_pair_2, out_paired_1, out_paired_2, out_unpaired_1, out_unpaired_2, adapter_file, threads)
@@ -102,10 +102,11 @@ def align(in_dir, read_pair_1, read_pair_2, align_dir, index_dir, threads):
     read_files = read_pair_1
     if read_pair_2:
         read_files = " ".join([read_pair_1, read_pair_2])
-    align_out_prefix = os.path.basename(read_pair_1).replace(".fastq.gz", align_suff)
+    align_out_prefix = remove_ext(os.path.basename(read_pair_1))
     align_out_prefix = os.path.join(align_dir, align_out_prefix)
     align_helper(read_files, align_out_prefix, index_dir, threads)
-    return align_out_prefix
+    aligned_file = align_out_prefix + align_suff
+    return aligned_file
 
 
 ############
@@ -125,9 +126,9 @@ def count_helper(alignment_files, counts_cols, gtf_file, output_file, paired=Fal
         subprocess.run(command, stdout=outfile)
     return
 
-def count(in_dir, aligned_file, paired, gtf_file, count_dir, counts_matrix, threads):
+def count(in_dir, aligned_file, paired, gtf_file, count_dir, threads):
     aligned_files = [aligned_file]
-    counts_cols = [os.path.splitext(os.path.basename(aligned_file))[0].replace("Aligned.sortedByCoord.out.bam", "")]
-    count_out_file = os.path.join(count_dir, counts_matrix)
+    counts_cols = [remove_ext(os.path.basename(aligned_file))]
+    count_out_file = os.path.join(count_dir, f"{counts_cols[0]}.tsv")
     count_helper(aligned_files, counts_cols, gtf_file, count_out_file, paired=paired, threads=threads)
     return count_out_file

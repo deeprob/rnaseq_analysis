@@ -1,0 +1,15 @@
+#Deriving the latest base image
+FROM python:latest
+
+RUN apt-get update && apt-get -y install \
+    trimmomatic \
+    git \
+    rna-star \
+    python-htseq \
+    unzip \
+    wget && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /rnacounts
+
+COPY src/ /rnacounts
