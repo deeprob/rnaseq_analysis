@@ -1,0 +1,7 @@
+,condition
+control_rep1_colname,control
+control_rep2_colname,control
+control_rep3_colname,control
+treated_rep1_colname,treatment
+treated_rep2_colname,treatment
+treated_rep3_colname,treatment

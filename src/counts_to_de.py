@@ -1,7 +1,6 @@
 import os
 import argparse
 import logging
-import utils.de as utd
 import utils.helper as uth
 
 
@@ -17,11 +16,13 @@ def main(
     de_results_file,
     meta_norm_counts_file
     ):
-    # create appropriate directories
-    de_dir = utd.create_dirs(os.path.join(store_dir, f"{treatment}vs{control}"))
     logfile = os.path.join(de_dir, "glrnade.log")
     logging.basicConfig(filename=logfile, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO, filemode="w")
-    logging.info("Starting Girirajan Lab RNASeq counts to de pipeline ...")
+    logging.info("Starting Girirajan Lab RNASeq counts to differential expression pipeline ...")
+
+    # create appropriate directories
+    de_dir = os.path.join(store_dir, f"{treatment}vs{control}")
+    os.makedirs(de_dir, exist_ok=True)
     logging.info(f"Created dir {de_dir} ...")
 
     # get count columns
@@ -31,10 +32,10 @@ def main(
     if meta_counts_file=="":
         logging.info(f"Creating meta counts file ...")
         meta_counts_file = os.path.join(de_dir, "meta_counts.csv")
-        utd.make_meta_counts(counts_dir, counts_columns, meta_counts_file)
+        uth.make_meta_counts(counts_dir, counts_columns, meta_counts_file)
 
     # get design formula components
-    design_formula_components, design_formula = utd.get_formula(design_matrix_file)
+    design_formula_components, design_formula = uth.get_formula(design_matrix_file)
     logging.info(f"The design formula is {design_formula}.")
 
     # create contrast
@@ -47,7 +48,7 @@ def main(
 
     # deseq2
     logging.info("Running Differential Expression using deseq2 ...")
-    utd.run_deseq2(
+    uth.run_deseq2(
         meta_counts_file, counts_columns, design_matrix_file, design_formula, contrast, results_file, meta_norm_counts_file
         )
     return

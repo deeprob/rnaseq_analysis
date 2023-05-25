@@ -5,7 +5,7 @@ Tools: | Trimmomatic | STAR | HTSeq | DESeq2 | sklearn & seaborn | clusterprofil
 
 # Quickstart
 
-## Running reads to counts
+## Running the pipeline
 Step 1: Create a project dir and store all RNA-seq fastq files inside the *raw* subdir
 ```bash
 $ cd /path/to/project_dir
@@ -24,14 +24,19 @@ $ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest prepare.
 ```
 By default - reference genome version hg38, gencode annotation v42 and adapter sequence TruSeq3-PE.fa is downloaded. To change genome, gencode annotation version and adapter sequence look at Section: [Using alternate preliminary data](#using-alternate-preliminary-data)
 
-Step 4: Run reads to counts pipeline 
+Step 4: Run reads to counts 
 ```bash
-$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest python3 reads_to_counts.py hcc1395_normal_rep1_r1.fastq.gz --read_file2 hcc1395_normal_rep1_r2.fastq.gz --threads 4
+$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest python3 reads_to_counts.py read1_filename.fastq.gz --read_file2 read2_filename.fastq.gz --threads 4 --createstarindex
 ```
 
-## Running counts to de
-Step 1: Create metafile that contains control and treatment library info
+Step 5: Create design matrix and store it inside project dir
+The design matrix contains information about each sample. The sample names provided in the design matrix must be exactly same the name in the sample counts file. Control samples info should be given first followed by the treated samples. Example design matrix file is provided in the *examples* folder.
 
+
+Step 6: Run counts to de 
+```bash
+$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna:latest python3 counts_to_de.py --treatment_names treated_rep1_colname treated_rep2_colname treated_rep3_colname --control_names control_rep1_colname control_rep2_colname control_rep3_colname --design_matrix /data/relative/path/inside/project_dir
+```
 
 # Test pipeline
 Step 1: Download and untar test data
