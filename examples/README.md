@@ -1,4 +1,6 @@
-# Metadata description
+# Example adapter sequence file
+
+# Example metadata file
 
 The metadata file is a nested dictionary in json format. The outer dictionary contains library names and genome as dictionary keys. The value for each library name is a dictionary whose **key**-**value** pairs are:
 
