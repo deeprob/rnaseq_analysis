@@ -16,13 +16,13 @@ def main(
     de_results_file,
     meta_norm_counts_file
     ):
-    logfile = os.path.join(de_dir, "glrnade.log")
-    logging.basicConfig(filename=logfile, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO, filemode="w")
-    logging.info("Starting Girirajan Lab RNASeq counts to differential expression pipeline ...")
-
     # create appropriate directories
     de_dir = os.path.join(store_dir, f"{treatment}vs{control}")
     os.makedirs(de_dir, exist_ok=True)
+
+    logfile = os.path.join(de_dir, "glrnade.log")
+    logging.basicConfig(filename=logfile, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO, filemode="w")
+    logging.info("Starting Girirajan Lab RNASeq counts to differential expression pipeline ...")
     logging.info(f"Created dir {de_dir} ...")
 
     # get count columns
