@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--rawdir", type=str, help="Provide the raw directory where RNASeq input fastq files are stored", default="/data/raw")
     parser.add_argument("--trim_adapter", type=str, help="Path of file with adapter sequences to be trimmed", default="/data/adapters/adapter.fa")
     parser.add_argument("--genome_file", type=str, help="Path to the reference genome file", default="/data/genome/genome.fasta")
-    parser.add_argument("--gtf_file",  type=str, help="Path to the genome annotation file", default="/data/genome/gene_annotations/annotation.gtf")
+    parser.add_argument("--gtf_file",  type=str, help="Path to the genome annotation file", default="/data/gene_annotations/annotation.gtf")
     parser.add_argument("--storedir", type=str, help="Provide the project directory where RNASeq output will be stored", default="/data/")
     parser.add_argument("--indexdir", type=str, help="Provide the index directory where STARR index is stored or will be stored", default="/data/starrindex")
     parser.add_argument("--createstarindex", help="Create star index", action="store_true")
