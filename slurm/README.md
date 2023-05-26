@@ -37,7 +37,7 @@ $ sbatch reads_to_counts.sh
 
 1. Download docker image based on your host architecture (if not previously downloaded)
 ```bash
-$ singularity pull ghcr.io/deeprob/glrna-{arch}:latest
+$ singularity pull docker://ghcr.io/deeprob/glrna-{arch}:latest
 ```
 
 2. Create design matrix and store it inside project dir

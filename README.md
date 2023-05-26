@@ -1,42 +1,31 @@
-# RNASeq analysis steps
+# RNA-seq analysis pipeline - Girirajan Lab
+This repository holds the source code and instructions to run Girirajan Lab's RNA-seq analysis pipeline. To run the pipeline please refer to the README files present within the folder CPU or SLURM depending on your platform. 
+
+The description of the files and folders present in this repository is as follows:
+
+- cpu: This folder holds instructions to run the pipeline on local machine
+- slurm: This folder holds instructions to run the pipeline on SLURM cluster
+- docker: This folder holds the dockerfile used to create a docker image of the pipeline
+
+# Current pipeline steps
 Steps: | Trim | Align | Count | DE | QC | Enrich |
 |---|---|---|---|---|---|---|
 Tools: | Trimmomatic | STAR | HTSeq | DESeq2 | sklearn & seaborn | clusterprofiler & enrichplot |
 
 # Quickstart
+Step 0: Select platform (cpu or slurm cluster) and architecture (amd64 or arm64)
 
-## Running the pipeline
 Step 1: Create a project dir and store all RNA-seq fastq files inside the *raw* subdir
-```bash
-$ cd /path/to/project_dir
-$ mkdir raw
-$ mv /path/to/read_files/* raw
-```
 
 Step 2: Download docker image based on your host architecture
-```bash
-$ docker pull ghcr.io/deeprob/glrna-{arch}:latest
-```
 
-Step 3: Run preparation code to get all required preliminary data
-```bash
-$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna-{arch}:latest prepare.sh
-```
-By default - reference genome version hg38, gencode annotation v42 and adapter sequence TruSeq3-PE.fa is downloaded. To change genome, gencode annotation version and adapter sequence look at Section: [Using alternate preliminary data](#using-alternate-preliminary-data)
+Step 3: Run preparation code to get all required preliminary data inside project dir
 
 Step 4: Run reads to counts 
-```bash
-$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna-{arch}:latest python3 reads_to_counts.py read1_filename.fastq.gz --read_file2 read2_filename.fastq.gz --threads 4 --createstarindex
-```
 
 Step 5: Create design matrix and store it inside project dir
-The design matrix contains information about each sample. The sample names provided in the design matrix must be exactly same the name in the sample counts file. Control samples info should be given first followed by the treated samples. Example design matrix file is provided in the *examples* folder.
-
 
 Step 6: Run counts to de 
-```bash
-$ docker run -v /path/to/project_dir:/data ghcr.io/deeprob/glrna-{arch}:latest python3 counts_to_de.py --treatment_names treated_rep1_colname treated_rep2_colname treated_rep3_colname --control_names control_rep1_colname control_rep2_colname control_rep3_colname --design_matrix /data/relative/path/inside/project_dir/to/design_matrix.csv
-```
 
 # Test pipeline
 Step 1: Download and untar test data
@@ -49,12 +38,8 @@ $ rm pratical.tar
 Step 2: Follow [Quickstart](#quickstart)
 
 # Using alternate preliminary data
-By default our pipeline is set to use the human reference genome version hg38, gencode annotations v42 and illumina adapter sequence for trimming version TruSeq3-PE. However they can be easily changed by:
+By default our pipeline downloads the human reference genome version hg38, gencode annotations v42 and illumina adapter sequence for trimming version TruSeq3-PE. However they can be easily changed by editing the *prepare.sh* script as given below:
 
-1. Downloading all preliminary data inside the project dir albeit maintaining the dir structure (as below) 
-2. Specifying the changed file location while running the docker image
-
-## Downloading alternate data while maintaining dir structure
 1. Alternate genome file: Let's assume that you would like to use mm39 mouse genome.
     ```bash
     $ # inside project dir create genome folder with version number
@@ -87,5 +72,9 @@ By default our pipeline is set to use the human reference genome version hg38, g
     $ # download adapters file from your link
     $ wget https://raw.githubusercontent.com/deeprob/rnaseq_analysis/new-interface/examples/adapters/TruSeq3-SE.fa
     ```
+
+# Running counts to de only with your own count matrix file
+
+
 
 **Most tools were chosen following the works of Corchete et. al., Systematic comparison and assessment of RNA‑seq procedures for gene expression quantitative analysis**
