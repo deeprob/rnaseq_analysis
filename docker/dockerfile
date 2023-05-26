@@ -24,7 +24,7 @@ WORKDIR /rnacounts
 
 COPY requirements.txt /rnacounts/requirements.txt
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # install deseq2
 COPY install_packages.R /rnacounts/install_packages.R
