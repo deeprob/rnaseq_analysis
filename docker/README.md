@@ -1,6 +1,8 @@
-# Docker build
+# Docker build and push to ghcr.io
 ```bash
-$ docker image build -t glrna:0.0.1 -f ./docker/glrnade/dockerfile .
+$ docker image build -t glrna:0.0.4 -f ./docker/dockerfile .
+$ docker tag glrna:0.0.4 ghcr.io/deeprob/glrna:latest
+$ docker push ghcr.io/deeprob/glrna
 ```
 
 # Resources
