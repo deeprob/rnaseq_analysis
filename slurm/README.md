@@ -23,7 +23,7 @@ $ mv /path/to/read_files/* raw
 
 2. Download docker image based on your host architecture
 ```bash
-$ singularity pull ghcr.io/deeprob/glrna-{arch}:latest
+$ singularity pull docker://ghcr.io/deeprob/glrna-{arch}:latest
 ```
 
 3. Edit sbatch variables and environmental variables marked as "TODO" in *reads_to_counts.sh*

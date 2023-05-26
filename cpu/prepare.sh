@@ -13,13 +13,15 @@ bwa index -a bwtsw genome.fasta
 
 # download gene annotations
 cd $proj_dir
-mkdir gene_annotations
+mkdir -p gene_annotations
+cd gene_annotations
 wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_42/gencode.v42.chr_patch_hapl_scaff.basic.annotation.gtf.gz
 mv gencode.v42.chr_patch_hapl_scaff.basic.annotation.gtf.gz annotation.gtf.gz
 gunzip annotation.gtf.gz
 
 # download adapter sequences
 cd $proj_dir
-mkdir adapters
+mkdir -p adapters
+cd adapters
 wget https://raw.githubusercontent.com/deeprob/rnaseq_analysis/new-interface/examples/adapters/TruSeq3-PE.fa
 mv TruSeq3-PE.fa adapter.fa
