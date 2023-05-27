@@ -127,33 +127,23 @@ def count(in_dir, aligned_file, paired, gtf_file, count_dir, threads):
 ####################
 
 def read_counts_matrix(counts_dir, counts_col):
-    df = pd.read_csv(os.path.join(counts_dir, f"{counts_col}.tsv"), sep="\t", index_col="gene_id")
-    gene_id_to_name_map = df.loc[:, ["gene_name"]].reset_index()
-    df = df.drop(columns=["gene_name"])
-    return df, gene_id_to_name_map
+    df = pd.read_csv(os.path.join(counts_dir, f"{counts_col}.tsv"), sep="\t", index_col=["gene_id", "gene_name"])
+    return df
 
 def make_meta_counts_mat_helper(counts_dir, counts_cols):
-    counts_dfs_info = [read_counts_matrix(counts_dir, cc) for cc in counts_cols]
-    meta_count_df = pd.concat([cdf for cdf,_ in counts_dfs_info], axis=1)
-    gene_id2name_maps = [id2n for _,id2n in counts_dfs_info]
-    assert gene_id2name_maps[0].equals(gene_id2name_maps[1])
+    counts_dfs = [read_counts_matrix(counts_dir, cc) for cc in counts_cols]
+    meta_count_df = pd.concat(counts_dfs, axis=1)
     meta_count_df.columns = [f"X{c}" if c[0].isdigit() else c for c in meta_count_df.columns]
-    return meta_count_df, gene_id2name_maps[0]
+    return meta_count_df
 
 def make_meta_counts(
         counts_dir, 
         counts_cols,
         meta_counts_outfile
         ):
-    meta_count_df, gid2name_df = make_meta_counts_mat_helper(
-            counts_dir, 
-            counts_cols
-            )
+    meta_count_df = make_meta_counts_mat_helper(counts_dir, counts_cols)
     # save meta counts file
-    meta_count_df.iloc[:-5].to_csv(meta_counts_outfile, index=True, header=True, sep="\t")
-    # save gene id to name mapping file
-    gid2name_outfile = os.path.join(os.path.dirname(meta_counts_outfile), "geneid2name.csv")
-    gid2name_df.iloc[:-5].to_csv(gid2name_outfile, index=False, header=True)
+    meta_count_df.iloc[:-5].to_csv(meta_counts_outfile, index=True, header=True)
     return
 
 #################
