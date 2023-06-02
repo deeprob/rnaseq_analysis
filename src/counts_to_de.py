@@ -14,7 +14,8 @@ def main(
     meta_counts_file,
     design_matrix_file, 
     de_results_file,
-    meta_norm_counts_file
+    meta_norm_counts_file,
+    mingenecounts,
     ):
     # create appropriate directories
     de_dir = os.path.join(store_dir, f"{treatment}vs{control}")
@@ -49,7 +50,7 @@ def main(
     # deseq2
     logging.info("Running Differential Expression using deseq2 ...")
     uth.run_deseq2(
-        meta_counts_file, counts_columns, design_matrix_file, design_formula, contrast, results_file, meta_norm_counts_file
+        meta_counts_file, counts_columns, design_matrix_file, design_formula, contrast, results_file, meta_norm_counts_file, mingenecounts
         )
     return
 
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--metacountsfile", type=str, help="meta counts matrix filename", default="")
     parser.add_argument("--deoutfile", type=str, help="diff exp outfilename", default="de_results.csv")
     parser.add_argument("--normctsoutfile", type=str, help="DESeq2 normalized counts out file", default="meta_norm_counts.csv")
+    parser.add_argument("--mingenecounts", type=int, help="Minimum count of genes in all samples combined", default=10)
 
 
     cli_args = parser.parse_args()
@@ -79,5 +81,6 @@ if __name__ == "__main__":
         meta_counts_file=cli_args.metacountsfile,
         design_matrix_file=cli_args.design_matrix, 
         de_results_file=cli_args.deoutfile,
-        meta_norm_counts_file=cli_args.normctsoutfile
+        meta_norm_counts_file=cli_args.normctsoutfile,
+        mingenecounts=cli_args.mingenecounts,
         )

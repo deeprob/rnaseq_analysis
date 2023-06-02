@@ -5,11 +5,10 @@ library(DESeq2)
 # https://www.reneshbedre.com/blog/deseq2.html
 # https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
 
-# get the counts file
 args = commandArgs(trailingOnly=TRUE)
-# check to see that two argument is given
-if (length(args)!=7) {
-  stop("Input counts filename, in_columns, design matrix filename, design formula, contrast, output filename and normalized counts output filename must be given", call.=FALSE)
+# check to see that eight arguments are given
+if (length(args)!=8) {
+  stop("Input counts filename, in_columns, design matrix filename, design formula, contrast, output filename, normalized counts output filename and min gene counts must be given", call.=FALSE)
 }
 
 infilename = args[1]
@@ -19,6 +18,7 @@ designformula = args[4]
 contraststr = args[5]
 outfilename = args[6]
 normcts_file = args[7]
+mingenecounts = as.integer(args[8])
 
 # read count file
 cnt_table <- read.table(infilename, sep=",", row.names=1, header=TRUE)
@@ -31,6 +31,8 @@ design_table[] <- lapply(design_table, factor)
 dds <- DESeqDataSetFromMatrix(countData = cnt_table,
                               colData = design_table,
                               design = as.formula(designformula))
+# prefilters to remove genes with less than user-provided reads in all samples combined
+dds <- dds[rowSums(counts(dds)) >= mingenecounts,] 
 # run DESeq pipeline, will normalize using median of ratios
 resdds <- DESeq(dds)
 # get the results

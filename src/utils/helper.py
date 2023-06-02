@@ -158,8 +158,8 @@ def get_formula(design_matrix_file):
 # deseq run #
 #############
 
-def run_deseq2(counts_file, counts_cols, designfile, design_formula, contrast, de_file, normcts_file):
+def run_deseq2(counts_file, counts_cols, designfile, design_formula, contrast, de_file, normcts_file, mingenecounts):
 	counts_cols_to_str = ",".join(counts_cols)
-	cmd = ["Rscript", deseq2_script_path, counts_file, counts_cols_to_str, designfile, design_formula, contrast, de_file, normcts_file]
+	cmd = ["Rscript", deseq2_script_path, counts_file, counts_cols_to_str, designfile, design_formula, contrast, de_file, normcts_file, mingenecounts]
 	subprocess.run(cmd)
 	return
