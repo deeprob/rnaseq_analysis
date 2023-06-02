@@ -9,7 +9,7 @@
 #SBATCH --chdir /data6/deepro/rna_cache # TODO: set dir to project dir
 #SBATCH -o /data6/deepro/rna_cache/slurm/logs/out_run.log # TODO: set slurm output file
 #SBATCH -e /data6/deepro/rna_cache/slurm/logs/err_run.log # TODO: set slurm input file
-#SBATCH --nodelist=sarah
+#SBATCH --nodelist=sarah # TODO: set nodelist
 
 
 
