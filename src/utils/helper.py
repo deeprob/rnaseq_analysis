@@ -144,14 +144,17 @@ def make_meta_counts(
     meta_count_df = make_meta_counts_mat_helper(counts_dir, counts_cols)
     # save meta counts file
     meta_count_df.iloc[:-5].to_csv(meta_counts_outfile, index=True, header=True)
-    return
+    return dict(zip(counts_cols, list(meta_count_df.columns)))
 
 #################
 # design matrix #
 #################
 
-def get_formula(design_matrix_file):
+def get_formula(design_matrix_file, count_col_dict, de_dir):
     df = pd.read_csv(design_matrix_file, nrows=1, index_col=0)
+    df = df.rename(index=count_col_dict)
+    dmf_savefile = os.path.join(de_dir, "design_matrix.csv")
+    df.to_csv(dmf_savefile)
     return list(df.columns), f"~{'+'.join(list(df.columns))}"
 
 #############

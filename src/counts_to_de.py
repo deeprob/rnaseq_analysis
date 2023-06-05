@@ -33,10 +33,10 @@ def main(
     if meta_counts_file=="":
         logging.info(f"Creating meta counts file ...")
         meta_counts_file = os.path.join(de_dir, "meta_counts.csv")
-        uth.make_meta_counts(counts_dir, counts_columns, meta_counts_file)
+        count_col_dict = uth.make_meta_counts(counts_dir, counts_columns, meta_counts_file)
 
     # get design formula components
-    design_formula_components, design_formula = uth.get_formula(design_matrix_file)
+    design_formula_components, design_formula = uth.get_formula(design_matrix_file, count_col_dict, de_dir)
     logging.info(f"The design formula is {design_formula}.")
 
     # create contrast
