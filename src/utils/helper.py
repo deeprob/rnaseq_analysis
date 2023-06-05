@@ -209,7 +209,7 @@ def get_pca_plots_helper(meta_df, designmatrixfile):
         style="factor" if factor else "library", 
         legend=True, 
         ax=ax, 
-        s=150,
+        s=100,
         alpha=1.,
         linewidth=1.05,
         edgecolor="k",
@@ -258,6 +258,9 @@ def create_volcano_fig_raw(df_volcano, lfc_thresh, pv_thresh, gene_set=[]):
     sns.scatterplot(
         data=df_volcano, x="log2FoldChange", y="neglog10padj", 
         hue="hue", palette={"Significant Down": "green", "Not Significant": "grey", "Significant Up": "red"},
+        size="hue",
+        sizes={"Significant Up": 20, "Not Significant":2, "Significant Down": 20}, 
+        rasterized=True,
         ax=axes,
         legend=False,
         )
@@ -284,7 +287,7 @@ def create_volcano_fig_raw(df_volcano, lfc_thresh, pv_thresh, gene_set=[]):
     axes.collections[0].set_rasterized(True)
     return fig
 
-def create_volcano_plot(de_dir, deseq_outfile, meta_countsfile, gene_set=[], lfc_thresh=0.5, pv_thresh=0.05):
+def create_volcano_plot(de_dir, deseq_outfile, meta_countsfile, gene_set=[], lfc_thresh=0.25, pv_thresh=0.05):
     # get deseq results
     de_df = read_deseq_results(deseq_outfile, meta_countsfile)
     # parse deseq results
