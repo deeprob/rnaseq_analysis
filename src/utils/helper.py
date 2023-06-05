@@ -133,7 +133,9 @@ def read_counts_matrix(counts_dir, counts_col):
 def make_meta_counts_mat_helper(counts_dir, counts_cols):
     counts_dfs = [read_counts_matrix(counts_dir, cc) for cc in counts_cols]
     meta_count_df = pd.concat(counts_dfs, axis=1)
-    meta_count_df.columns = [f"X{c}" if c[0].isdigit() else c for c in meta_count_df.columns]
+    # rename all colnames starting with digits by adding X before (stupid R and deseq2)
+    # replace all dashes with underscore (idiotic R and deseq2)
+    meta_count_df.columns = [f"X{c.replace('-', '_')}" if c[0].isdigit() else c for c in meta_count_df.columns]
     return meta_count_df
 
 def make_meta_counts(
@@ -151,11 +153,11 @@ def make_meta_counts(
 #################
 
 def get_formula(design_matrix_file, count_col_dict, de_dir):
-    df = pd.read_csv(design_matrix_file, nrows=1, index_col=0)
+    df = pd.read_csv(design_matrix_file, index_col=0)
     df = df.rename(index=count_col_dict)
     dmf_savefile = os.path.join(de_dir, "design_matrix.csv")
     df.to_csv(dmf_savefile)
-    return list(df.columns), f"~{'+'.join(list(df.columns))}"
+    return list(df.columns), f"~{'+'.join(list(df.columns))}", dmf_savefile
 
 #############
 # deseq run #
