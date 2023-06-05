@@ -53,6 +53,10 @@ def main(
     uth.run_deseq2(
         meta_counts_file, counts_columns, design_matrix_file, design_formula, contrast, results_file, meta_norm_counts_file, mingenecounts
         )
+    
+    # create pca and volcano plots
+    uth.create_lib_specific_pca_plot(de_dir, meta_norm_counts_file, design_matrix_file)
+    uth.create_volcano_plot(de_dir, results_file, meta_counts_file)
     return
 
 if __name__ == "__main__":
