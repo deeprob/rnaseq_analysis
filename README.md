@@ -107,8 +107,8 @@ By default our pipeline downloads the human reference genome version hg38, genco
     $ mkdir -p gene_annotations
     $ cd gene_annotations
     $ # download gene annotations file from your link
-    $ wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/genes/refGene.gtf.gz
-    $ mv refGene.gtf.gz annotation.gtf.gz
+    $ wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M32/gencode.vM32.chr_patch_hapl_scaff.basic.annotation.gtf.gz
+    $ mv gencode.vM32.chr_patch_hapl_scaff.basic.annotation.gtf.gz annotation.gtf.gz
     $ gunzip annotation.gtf.gz
     ```
 
