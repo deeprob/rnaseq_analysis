@@ -144,6 +144,10 @@ def read_counts_matrix(counts_dir, counts_col):
     df = pd.read_csv(os.path.join(counts_dir, f"{counts_col}.tsv"), sep="\t", index_col=["gene_id", "gene_name"])
     return df
 
+def rename_counts_columns_to_convention(old_colnames):
+    new_colnames = [f"X{c.replace('-', '_')}" if c[0].isdigit() else c for c in old_colnames]
+    return dict(zip(old_colnames, new_colnames))
+
 def make_meta_counts_mat_helper(counts_dir, counts_cols):
     counts_dfs = [read_counts_matrix(counts_dir, cc) for cc in counts_cols]
     meta_count_df = pd.concat(counts_dfs, axis=1)
