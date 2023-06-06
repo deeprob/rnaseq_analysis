@@ -35,6 +35,7 @@ def main(
         meta_counts_file = os.path.join(de_dir, "meta_counts.csv")
         count_col_dict = uth.make_meta_counts(counts_dir, counts_columns, meta_counts_file)
     else:
+        logging.info(f"Using user provided meta counts file ...")
         count_col_dict = uth.rename_counts_columns_to_convention(counts_columns)
 
     counts_columns = [count_col_dict[c] for c in counts_columns]
