@@ -116,24 +116,24 @@ def align(in_dir, read_pair_1, read_pair_2, align_dir, index_dir, threads):
 # counting #
 ############
 
-def count_helper(alignment_files, counts_cols, gtf_file, output_file, paired=False, threads=64):
+def count_helper(alignment_files, counts_cols, gtf_file, output_file, strand, paired=False, threads=64):
     # count using htseq
     with open(output_file, "w") as outfile:
         outfile.write("\t".join(["gene_id", "gene_name"] + counts_cols) + "\n")
 
     with open(output_file, "a") as outfile:
         if not paired:
-            command = ["htseq-count", "-f", "bam", "-s", "no", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
+            command = ["htseq-count", "-f", "bam", "-s", f"{strand}", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
         else:
-            command = ["htseq-count", "-f", "bam", "-s", "yes", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
+            command = ["htseq-count", "-f", "bam", "-s", f"{strand}", "-r", "pos", "-i", "gene_id", "--additional-attr", "gene_name", "-n", f"{threads}"] + alignment_files + [gtf_file]
         subprocess.run(command, stdout=outfile)
     return
 
-def count(in_dir, aligned_file, paired, gtf_file, count_dir, threads):
+def count(in_dir, aligned_file, paired, gtf_file, count_dir, strand, threads):
     aligned_files = [aligned_file]
     counts_cols = [remove_ext(os.path.basename(aligned_file))]
     count_out_file = os.path.join(count_dir, f"{counts_cols[0]}.tsv")
-    count_helper(aligned_files, counts_cols, gtf_file, count_out_file, paired=paired, threads=threads)
+    count_helper(aligned_files, counts_cols, gtf_file, count_out_file, strand, paired=paired, threads=threads)
     return count_out_file
 
 ###########################
