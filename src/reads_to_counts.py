@@ -13,6 +13,7 @@ def main(
     genome_file,
     gtf_file,
     adapter_file,
+    lib_strand,
     index_flag,
     threads,
     ):
@@ -43,7 +44,7 @@ def main(
     paired=False
     if read2_file:
         paired=True
-    count_file = uth.count(align_dir, aligned_file, paired, gtf_file, count_dir, threads)
+    count_file = uth.count(align_dir, aligned_file, paired, gtf_file, count_dir, lib_strand, threads)
     logging.info(f"Results stored in {count_file}.")
     return
 
@@ -59,6 +60,7 @@ if __name__ == "__main__":
     parser.add_argument("--storedir", type=str, help="Provide the project directory where RNASeq output will be stored", default="/data/")
     parser.add_argument("--indexdir", type=str, help="Provide the index directory where STARR index is stored or will be stored", default="/data/starrindex")
     parser.add_argument("--createstarindex", help="Create star index", action="store_true")
+    parser.add_argument("--strand", help="for strand specific rnaseq library; one of yes/non/reverse", default="reverse", type=str)
     parser.add_argument("--threads", help="number of threads to use", default=64, type=int)
 
     cli_args = parser.parse_args()
@@ -72,6 +74,7 @@ if __name__ == "__main__":
         genome_file=cli_args.genome_file, 
         gtf_file=cli_args.gtf_file,
         adapter_file=cli_args.trim_adapter,
+        lib_strand=cli_args.strand,
         index_flag=cli_args.createstarindex,
         threads=cli_args.threads,
         )
