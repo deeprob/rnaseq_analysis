@@ -128,3 +128,9 @@ By default our pipeline downloads the human reference genome version hg38, genco
 
 
 **Most tools were chosen following the works of Corchete et. al., Systematic comparison and assessment of RNA‑seq procedures for gene expression quantitative analysis**
+
+Reference:
+1. https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/samplepreps_truseq/truseq-stranded-total-rna-workflow/truseq-stranded-total-rna-workflow-reference-1000000040499-00.pdf
+2. https://rnabio.org/module-09-appendix/0009/12/01/StrandSettings/
+3. https://www.biostars.org/p/205987/
+4. https://bioweb.pasteur.fr/docs/modules/HTSeq/0.5.3p9/count.html
