@@ -1,0 +1,5 @@
+Bootstrap: docker
+From: ghcr.io/deeprob/glrna-amd64:latest
+
+%post
+chmod -R 777 /rnacounts
